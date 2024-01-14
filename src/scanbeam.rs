@@ -191,6 +191,15 @@ impl ScanBeam {
             }
             // println!("{:?}", self.actives);
             i += 1;
+
+            match bt.events.last() {
+                None => { }
+                Some(last_pt) => {
+                    if pt == last_pt {
+                        continue
+                    }
+                }
+            }
             bt.events.push((*pt).clone());
             bt.actives.push(self.actives.clone());
         }
