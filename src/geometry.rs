@@ -12,6 +12,12 @@ impl Point {
     }
 }
 
+impl From<(f64, f64)> for Point {
+    fn from(value: (f64, f64)) -> Self {
+        Point::new(value.0, value.1)
+    }
+}
+
 impl Eq for Point {}
 
 impl PartialEq<Self> for Point {
@@ -41,7 +47,6 @@ impl Ord for Point {
         return Ordering::Equal;
     }
 }
-
 
 #[derive(Debug, Clone)]
 pub struct Line {
@@ -80,7 +85,9 @@ impl Line {
         let c = &line.p0;
         let d = &line.p1;
         let denom: f64 = (d.y - c.y) * (b.x - a.x) - (d.x - c.x) * (b.y - a.y);
-        if denom.abs() < 1e-12 { return None; }
+        if denom.abs() < 1e-12 {
+            return None;
+        }
         let t1: f64 = ((d.x - c.x) * (a.y - c.y) - (d.y - c.y) * (a.x - c.x)) / denom;
         let t2: f64 = ((b.x - a.x) * (a.y - c.y) - (b.y - a.y) * (a.x - c.x)) / denom;
         if 0.0 <= t1 && t1 <= 1.0 && 0.0 <= t2 && t2 <= 1.0 {
@@ -107,8 +114,9 @@ impl Line {
     }
 
     pub fn point(&self, t: f64) -> Point {
-        Point::new(t * (self.p1.x - self.p0.x) + self.p0.x, t * (self.p1.y - self.p0.y) + self.p0.y)
+        Point::new(
+            t * (self.p1.x - self.p0.x) + self.p0.x,
+            t * (self.p1.y - self.p0.y) + self.p0.y,
+        )
     }
 }
-
-

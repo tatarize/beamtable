@@ -1,10 +1,10 @@
-mod geometry;
 mod events;
-mod scanbeam;
+pub mod geometry;
+pub mod scanbeam;
 mod table;
 
-use pyo3::prelude::*;
 use crate::scanbeam::ScanBeam;
+use pyo3::prelude::*;
 
 ///
 #[pyfunction]
