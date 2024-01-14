@@ -75,7 +75,7 @@ impl ScanBeam {
         let r = actives[r];
         let segments = &self.segments;
         let checked_swaps = &mut self.checked_swaps;
-        println!("{q} {r}");
+        // println!("{q} {r}");
         if checked_swaps.contains(&(q, r)) {
             return;
         }
@@ -88,7 +88,7 @@ impl ScanBeam {
             Some(t) => {
                 let t1 = t.0;
                 let t2 = t.1;
-                println!("{t1}, {t2}");
+                // println!("{t1}, {t2}");
                 if ((t1 == 0.0 || t1 == 1.0)) && ((t2 == 0.0) || (t2 == 1.0)) {
                     return;
                 }
@@ -149,13 +149,13 @@ impl ScanBeam {
 
         let mut bt = BeamTable::new();
         let mut i: i32 = 0;
-        println!("{:?}", events);
+        // println!("{:?}", events);
         while i < self.events.len() as i32 {
             let event = &self.events[i as usize].clone();
             let idx = event.index;
             let index = event.index;
             let pt = &event.point;
-            println!("{:?}", event);
+            // println!("{:?}", event);
             match event.swap {
                 None => {
                     if idx >= 0 {
@@ -189,7 +189,7 @@ impl ScanBeam {
                     }
                 }
             }
-            println!("{:?}", self.actives);
+            // println!("{:?}", self.actives);
             i += 1;
             bt.events.push((*pt).clone());
             bt.actives.push(self.actives.clone());
