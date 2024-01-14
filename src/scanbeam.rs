@@ -21,10 +21,11 @@ impl ScanBeam {
             checked_swaps: Vec::new(),
         }
     }
+
     pub(crate) fn from_floats(segments: Vec<(f64, f64, f64, f64)>) -> ScanBeam {
         let mut segs = Vec::new();
         for m in segments.iter() {
-            segs.push(Line::new((m.0, m.1), (m.2, m.3), 0))
+            segs.push(Line::new(Point::new(m.0, m.1), Point::new(m.2, m.3), 0))
         }
 
         ScanBeam {

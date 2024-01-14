@@ -74,7 +74,7 @@ impl Line {
         rise / run
     }
 
-    pub fn get_intersection(self, line: &Line) -> Option<(f64, f64)> {
+    pub fn get_intersection(&self, line: &Line) -> Option<(f64, f64)> {
         let a = &self.p0;
         let b = &self.p1;
         let c = &line.p0;
@@ -90,7 +90,7 @@ impl Line {
     }
 
     ///Returns the y_intercept point given a line a given x. Default is used for y if there is a line along the requested x
-    pub fn y_intercept(self, x: f64, default: f64) -> Point {
+    pub fn y_intercept(&self, x: f64, default: f64) -> Point {
         let a = &self.p0;
         let b = &self.p1;
         let rise: f64 = a.y - b.y;
