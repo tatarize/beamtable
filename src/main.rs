@@ -1,18 +1,30 @@
 use beamtable::geometry::Line;
 use beamtable::scanbeam::ScanBeam;
+use clap::Parser;
+use std::path::PathBuf;
 use vsvg::{DocumentTrait, Draw, LayerTrait, PathTrait};
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // load a SVG if provided
-    let path = std::env::args().nth(1).map(std::path::PathBuf::from);
-    let doc = if let Some(path) = path {
-        vsvg::Document::from_svg(&path, true)?
-    } else {
-        vsvg::Document::default()
-    };
+#[derive(clap::Parser, Debug)]
 
-    // flatten the document as we only support polyline
-    let doc = doc.flatten(vsvg::DEFAULT_TOLERANCE);
+struct Args {
+    /// SVG file
+    path: PathBuf,
+
+    /// Display the result
+    #[clap(long)]
+    show: bool,
+
+    /// Save the result as SVG
+    #[clap(long)]
+    save: Option<PathBuf>,
+}
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // use clap
+    let args = Args::parse();
+
+    // load and flatten the document as we only support polyline
+    let doc = vsvg::Document::from_svg(&args.path, true)?.flatten(vsvg::DEFAULT_TOLERANCE);
 
     // convert everything to lines
     let lines: Vec<_> = doc
@@ -54,7 +66,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         layer.circle(event.x, event.y, 0.5);
     }
 
-    vsvg_viewer::show(doc.into())?;
+    if let Some(path) = args.save {
+        // work around https://github.com/abey79/vsvg/issues/114
+        doc.metadata_mut().source = None;
+
+        doc.to_svg_file(path)?;
+    }
+
+    if args.show {
+        vsvg_viewer::show(doc.into())?;
+    }
 
     Ok(())
 }
