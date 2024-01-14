@@ -1,6 +1,6 @@
 use beamtable::geometry::Line;
 use beamtable::scanbeam::ScanBeam;
-use vsvg::{DocumentTrait, LayerTrait, PathTrait};
+use vsvg::{DocumentTrait, Draw, LayerTrait, PathTrait};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // load a SVG if provided
@@ -51,19 +51,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let layer = doc.get_mut(1);
     for event in beam_table.events {
-        // TODO: this is annoying to do, `Layer` should implement `Draw` https://github.com/abey79/vsvg/issues/109
-        let path = vsvg::Path::from_metadata(
-            kurbo::Circle::new(
-                kurbo::Point {
-                    x: event.x,
-                    y: event.y,
-                },
-                0.5,
-            ),
-            vsvg::PathMetadata::default(),
-        );
-
-        layer.push_path(path);
+        layer.circle(event.x, event.y, 0.5);
     }
 
     vsvg_viewer::show(doc.into())?;

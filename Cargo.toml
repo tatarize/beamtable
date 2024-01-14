@@ -12,8 +12,6 @@ crate-type = ["cdylib", "rlib"]
 pyo3 = "0.19.0"
 
 # TODO: split the bin into its own crate so we don't pull those deps inti the maturin target
-vsvg = "0.3.0"
-vsvg-viewer = "0.3.0"
-
-# TODO: getting this right is annoying, vsvg should reexport it instead: https://github.com/abey79/vsvg/issues/110
-kurbo = "0.10.4" # let vsvg choose version
+# TODO: set to 0.4.0 when released
+vsvg = { git = "https://github.com/abey79/vsvg", rev = "86ac544d0c049b3018d6f0a56611965886f0d461" }
+vsvg-viewer = { git = "https://github.com/abey79/vsvg", rev = "86ac544d0c049b3018d6f0a56611965886f0d461" }
