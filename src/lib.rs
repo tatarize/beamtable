@@ -2,6 +2,7 @@ mod geometry;
 mod events;
 mod scanbeam;
 mod table;
+mod tests;
 
 use pyo3::prelude::*;
 use crate::scanbeam::ScanBeam;
