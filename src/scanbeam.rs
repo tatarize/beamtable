@@ -4,7 +4,6 @@ use std::collections::BinaryHeap;
 use crate::events::Event;
 use crate::geometry::{Line, Point};
 use crate::table::BeamTable;
-use std::cmp::Ordering;
 
 pub struct ScanBeam {
     pub segments: Vec<Line>,
