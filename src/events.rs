@@ -25,15 +25,15 @@ impl PartialOrd<Self> for Event {
 impl Ord for Event {
     fn cmp(&self, other: &Self) -> Ordering {
         match Point::cmp(&self.point, &other.point) {
-            Ordering::Greater => { return Ordering::Greater; }
-            Ordering::Less => { return Ordering::Less; }
+            Ordering::Greater => { return Ordering::Less; }
+            Ordering::Less => { return Ordering::Greater; }
             Ordering::Equal => {}
         }
         if other.index > self.index {
-            return Ordering::Greater;
+            return Ordering::Less;
         }
         if other.index < self.index {
-            return Ordering::Less;
+            return Ordering::Greater;
         }
         return Ordering::Equal;
     }
