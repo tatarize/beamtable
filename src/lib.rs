@@ -1,14 +1,11 @@
-use pyo3::prelude::*;
-
-use crate::geometry::Geomstr;
-use crate::scanbeam::ScanBeam;
-
-mod geometry;
 mod events;
-mod scanbeam;
+pub mod geometry;
+pub mod scanbeam;
 mod table;
 mod tests;
 
+use crate::scanbeam::ScanBeam;
+use pyo3::prelude::*;
 // #[pyclass]
 // struct BeamTable {
 //     #[pyo3(get)]

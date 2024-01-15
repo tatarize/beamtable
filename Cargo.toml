@@ -6,10 +6,17 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [lib]
 name = "beamtable"
-crate-type = ["cdylib"]
+crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 pyo3 = "0.19.0"
 
+# TODO: split the bin into its own crate so we don't pull those deps inti the maturin target
+# TODO: set to 0.4.0 when released
+clap = { version = "4.4.16", features = ["derive"] }
+vsvg = { git = "https://github.com/abey79/vsvg", rev = "86ac544d0c049b3018d6f0a56611965886f0d461" }
+vsvg-viewer = { git = "https://github.com/abey79/vsvg", rev = "86ac544d0c049b3018d6f0a56611965886f0d461" }
+
 [dev-dependencies]
 rand = "0.8.5"
+

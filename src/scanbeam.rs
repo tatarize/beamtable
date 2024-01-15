@@ -74,14 +74,18 @@ impl ScanBeam {
                 let t1 = t.0;
                 let t2 = t.1;
                 // println!("{t1}, {t2}");
-                if ((t1 == 0.0 || t1 == 1.0)) && ((t2 == 0.0) || (t2 == 1.0)) {
+                if (t1 == 0.0 || t1 == 1.0) && ((t2 == 0.0) || (t2 == 1.0)) {
                     return;
                 }
                 let pt_intersect = segments.point(q as usize, t1);
                 self.intersections.push(pt_intersect.clone());
                 match Point::cmp(&sl, &pt_intersect) {
-                    Ordering::Greater => { return; }
-                    Ordering::Equal => { return; }
+                    Ordering::Greater => {
+                        return;
+                    }
+                    Ordering::Equal => {
+                        return;
+                    }
                     Ordering::Less => {}
                 }
                 checked_swaps.push((q, r));
@@ -154,7 +158,11 @@ impl ScanBeam {
                         }
                     } else {
                         //Remove.
-                        let rp = self.actives.iter().position(|&e| e == !index).expect("Was added should remove.");
+                        let rp = self
+                            .actives
+                            .iter()
+                            .position(|&e| e == !index)
+                            .expect("Was added should remove.");
                         self.actives.remove(rp);
                         if 0 < rp && rp < self.actives.len() {
                             self.check_intersections(rp - 1, rp, pt)
@@ -162,7 +170,11 @@ impl ScanBeam {
                     }
                 }
                 Some((s1, _)) => {
-                    let s1 = self.actives.iter().position(|&e| e == s1).expect("Swap pos should exist.");
+                    let s1 = self
+                        .actives
+                        .iter()
+                        .position(|&e| e == s1)
+                        .expect("Swap pos should exist.");
                     let s2 = s1 + 1;
                     self.actives.swap(s1, s2);
                     if s1 > 0 {
