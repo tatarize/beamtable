@@ -20,31 +20,31 @@ mod tests {
         ];
 
         let mut table = ScanBeam::new(segments);
-        let q = table.build();
-        println!("{:?}", q.actives);
-        println!("{:?}", q.events);
-        // assert_eq!(result, 4);
+        let _q = table.build();
+        // println!("{:?}", q.actives);
+        // println!("{:?}", q.events);
     }
 
     #[test]
     fn actives_monotonic() {
         let mut segments: Vec<Line> = Vec::new();
-        for _c in 0..10 {
-            for _i in 0..25 {
-                let mut rng = ThreadRng::default();
-
-                segments.push(
-                    Line::new(
-                        Point::new(rng.gen_range(0..1000) as f64, rng.gen_range(0..1000) as f64),
-                        Point::new(rng.gen_range(0..1000) as f64, rng.gen_range(0..1000) as f64),
-                        0
-                    ))
+        {
+            let mut rng = ThreadRng::default();
+            for c in 0..10 {
+                for _i in 0..25 {
+                    segments.push(
+                        Line::new(
+                            Point::new(rng.gen_range(0..1000) as f64, rng.gen_range(0..1000) as f64),
+                            Point::new(rng.gen_range(0..1000) as f64, rng.gen_range(0..1000) as f64),
+                            c
+                        ))
+                }
             }
         }
         let mut beam = ScanBeam::new(segments);
         let table = beam.build();
-        println!("{:?}", table.actives);
-        println!("{:?}", table.events);
+        // println!("{:?}", table.actives);
+        // println!("{:?}", table.events);
         for x in 0..1000 {
             let x = x as f64;
             let actives = table.actives_at(x, 0.0);
@@ -54,18 +54,18 @@ mod tests {
                 let pp0 = (&prev.p0).x;
                 let pp1 = (&prev.p1).x;
                 if &prev.p0.x < &prev.p1.x {
-                    println!("{pp0:?} {pp1:?} for {x:?}");
+                    // println!("{pp0:?} {pp1:?} for {x:?}");
                     assert!(x >= pp0);
                     assert!(x <= pp1);
                 }
                 else {
-                    println!("{pp1:?} {pp0:?} for {x:?}");
+                    // println!("{pp1:?} {pp0:?} for {x:?}");
                     assert!(x >= pp1);
                     assert!(x <= pp0);
                 }
                 let last_pos = prev.y_intercept(x, 0.0);
                 let pos = line.y_intercept(x, 0.0);
-                println!("{last_pos:?} {pos:?}");
+                // println!("{last_pos:?} {pos:?}");
                 assert!(last_pos <= pos);
             }
         }
