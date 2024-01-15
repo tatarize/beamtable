@@ -1,8 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use rand::prelude::ThreadRng;
-    use rand::Rng;
-    use crate::geometry::{Geomstr, Line, Point};
+    use crate::geometry::Geomstr;
     use crate::scanbeam::ScanBeam;
 
     #[test]
@@ -122,6 +120,4 @@ mod tests {
     //         }
     //     }
     // }
-
-
 }

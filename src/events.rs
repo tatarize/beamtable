@@ -1,4 +1,5 @@
 use std::cmp::Ordering;
+
 use crate::geometry::Point;
 
 #[derive(Debug, Clone)]

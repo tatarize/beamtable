@@ -1,13 +1,13 @@
+use pyo3::prelude::*;
+
+use crate::geometry::Geomstr;
+use crate::scanbeam::ScanBeam;
+
 mod geometry;
 mod events;
 mod scanbeam;
 mod table;
 mod tests;
-
-use pyo3::prelude::*;
-use pyo3::types::PyComplex;
-use crate::geometry::{Geomstr, Point};
-use crate::scanbeam::ScanBeam;
 
 // #[pyclass]
 // struct BeamTable {
@@ -40,9 +40,8 @@ use crate::scanbeam::ScanBeam;
 //     }
 //     Ok((segs, q.actives))
 // }
-
 #[pyfunction]
-fn build(segments: Vec<((f64, f64),(f64, f64),(f64, f64),(f64, f64), (f64, f64))>) -> (Vec<(f64, f64)>, Vec<Vec<i32>>) {
+fn build(segments: Vec<((f64, f64), (f64, f64), (f64, f64), (f64, f64), (f64, f64))>) -> (Vec<(f64, f64)>, Vec<Vec<i32>>) {
     let mut table = ScanBeam::new(Geomstr::from_segments(segments));
     let q = table.build();
 

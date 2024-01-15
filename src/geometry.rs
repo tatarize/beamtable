@@ -29,7 +29,7 @@ impl PartialOrd<Self> for Point {
 impl Ord for Point {
     fn cmp(&self, other: &Self) -> Ordering {
         if other == self {
-            return Ordering::Equal
+            return Ordering::Equal;
         }
         if other.x < self.x {
             return Ordering::Greater;
@@ -115,7 +115,7 @@ impl Line {
 }
 
 pub struct Geomstr {
-    pub segments: Vec<((f64, f64),(f64, f64),(f64, f64),(f64, f64), (f64, f64))>,
+    pub segments: Vec<((f64, f64), (f64, f64), (f64, f64), (f64, f64), (f64, f64))>,
 }
 
 impl Geomstr {
@@ -124,21 +124,21 @@ impl Geomstr {
             segments: Vec::new(),
         }
     }
-    pub fn from_segments(segments: Vec<((f64, f64),(f64, f64),(f64, f64),(f64, f64), (f64, f64))>) -> Geomstr {
+    pub fn from_segments(segments: Vec<((f64, f64), (f64, f64), (f64, f64), (f64, f64), (f64, f64))>) -> Geomstr {
         Geomstr {
             segments,
         }
     }
 
     pub fn rect(&mut self, x: f64, y: f64, width: f64, height: f64, settings: f64) {
-        self.line((x,y), (x + width,y), settings);
-        self.line((x+ width,y), (x+ width,y+height), settings);
-        self.line((x+ width,y+height),(x,y+height), settings);
-        self.line((x,y+height), (x,y), settings);
+        self.line((x, y), (x + width, y), settings);
+        self.line((x + width, y), (x + width, y + height), settings);
+        self.line((x + width, y + height), (x, y + height), settings);
+        self.line((x, y + height), (x, y), settings);
     }
 
     pub fn line(&mut self, p0: (f64, f64), p1: (f64, f64), settings: f64) {
-        &mut self.segments.push((p0, (0.,0.), (41.0, settings), (0.,0.), p1));
+        self.segments.push((p0, (0., 0.), (41.0, settings), (0., 0.), p1));
     }
 
     /// Slope where divide by 0 is always negative infinity.
@@ -152,7 +152,7 @@ impl Geomstr {
         rise / run
     }
 
-    pub fn get_intersection(&self, index0: usize, index1:usize) -> Option<(f64, f64)> {
+    pub fn get_intersection(&self, index0: usize, index1: usize) -> Option<(f64, f64)> {
         let line0 = &self.segments[index0];
         let line1 = &self.segments[index1];
         let a = &line0.0;

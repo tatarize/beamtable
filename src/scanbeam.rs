@@ -1,7 +1,8 @@
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
+
 use crate::events::Event;
-use crate::geometry::{Geomstr,  Point};
+use crate::geometry::{Geomstr, Point};
 use crate::table::BeamTable;
 
 pub struct ScanBeam {
@@ -173,10 +174,10 @@ impl ScanBeam {
                 }
             }
             match self.events.peek() {
-                None => { }
+                None => {}
                 Some(last_pt) => {
                     if pt == &last_pt.point {
-                        continue
+                        continue;
                     }
                 }
             }
