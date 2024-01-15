@@ -13,7 +13,7 @@ pub struct ScanBeam {
 }
 
 impl ScanBeam {
-    pub(crate) fn new(segments: Vec<Line>) -> ScanBeam {
+    pub fn new(segments: Vec<Line>) -> ScanBeam {
         ScanBeam {
             segments,
             events: BinaryHeap::new(),
@@ -111,7 +111,7 @@ impl ScanBeam {
         }
     }
 
-    pub(crate) fn build(&mut self) -> BeamTable {
+    pub fn build(&mut self) -> BeamTable {
         let events = &mut self.events;
         let segments = &self.segments;
         for (i, segment) in segments.iter().enumerate() {
@@ -186,14 +186,15 @@ impl ScanBeam {
                     }
                 }
             }
-            match bt.events.last() {
+            match self.events.peek() {
                 None => { }
                 Some(last_pt) => {
-                    if pt == last_pt {
+                    if pt == &last_pt.point {
                         continue
                     }
                 }
             }
+
             bt.events.push((*pt).clone());
             bt.actives.push(self.actives.clone());
         }
