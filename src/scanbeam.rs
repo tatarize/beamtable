@@ -2,11 +2,11 @@ use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 
 use crate::events::Event;
-use crate::geometry::{Line, Point};
+use crate::geometry::{Geomstr, Point};
 use crate::table::BeamTable;
 
 pub struct ScanBeam {
-    pub segments: Vec<Line>,
+    pub segments: Geomstr,
     pub intersections: Vec<Point>,
     pub events: BinaryHeap<Event>,
     pub actives: Vec<i32>,
@@ -14,24 +14,9 @@ pub struct ScanBeam {
 }
 
 impl ScanBeam {
-    pub fn new(segments: Vec<Line>) -> ScanBeam {
+    pub fn new(segments: Geomstr) -> ScanBeam {
         ScanBeam {
             segments,
-            events: BinaryHeap::new(),
-            actives: Vec::new(),
-            intersections: Vec::new(),
-            checked_swaps: Vec::new(),
-        }
-    }
-
-    pub(crate) fn from_floats(segments: Vec<(f64, f64, f64, f64)>) -> ScanBeam {
-        let mut segs = Vec::new();
-        for m in segments.iter() {
-            segs.push(Line::new(Point::new(m.0, m.1), Point::new(m.2, m.3), 0))
-        }
-
-        ScanBeam {
-            segments: segs,
             events: BinaryHeap::new(),
             actives: Vec::new(),
             intersections: Vec::new(),
@@ -48,8 +33,8 @@ impl ScanBeam {
         let mut mid;
         while lo < hi {
             mid = (lo + hi) / 2;
-            let test = &segments[actives[mid] as usize].y_intercept(scanline.x, scanline.y);
-            let value = &segments[x as usize].y_intercept(scanline.x, scanline.y);
+            let test = &segments.y_intercept(actives[mid] as usize, scanline.x, scanline.y);
+            let value = &segments.y_intercept(x as usize, scanline.x, scanline.y);
             match Point::cmp(&value, &test) {
                 Ordering::Less => {
                     hi = mid;
@@ -58,8 +43,8 @@ impl ScanBeam {
                     lo = mid + 1;
                 }
                 Ordering::Equal => {
-                    let test_slope = &segments[actives[mid] as usize].slope();
-                    let value_slope = &segments[x as usize].slope();
+                    let test_slope = &segments.slope(actives[mid] as usize);
+                    let value_slope = &segments.slope(x as usize);
                     if value_slope < test_slope {
                         hi = mid
                     } else {
@@ -81,9 +66,7 @@ impl ScanBeam {
         if checked_swaps.contains(&(q, r)) {
             return;
         }
-        let line1 = &segments[q as usize];
-        let line2 = &segments[r as usize];
-        let intersection = line1.get_intersection(line2);
+        let intersection = segments.get_intersection(q as usize, r as usize);
 
         match intersection {
             None => (),
@@ -94,7 +77,7 @@ impl ScanBeam {
                 if (t1 == 0.0 || t1 == 1.0) && ((t2 == 0.0) || (t2 == 1.0)) {
                     return;
                 }
-                let pt_intersect = line1.point(t1);
+                let pt_intersect = segments.point(q as usize, t1);
                 self.intersections.push(pt_intersect.clone());
                 match Point::cmp(&sl, &pt_intersect) {
                     Ordering::Greater => {
@@ -119,28 +102,31 @@ impl ScanBeam {
     pub fn build(&mut self) -> BeamTable {
         let events = &mut self.events;
         let segments = &self.segments;
-        for (i, segment) in segments.iter().enumerate() {
-            match Point::cmp(&segment.p0, &segment.p1) {
+        for i in 0..segments.segments.len() {
+            let line = &self.segments.segments[i];
+            let p0 = Point::new(line.0.0, line.0.1);
+            let p1 = Point::new(line.4.0, line.4.1);
+            match Point::cmp(&p0, &p1) {
                 Ordering::Less => {
                     events.push(Event {
-                        point: segment.p0.clone(),
+                        point: p0,
                         index: i as i32,
                         swap: None,
                     });
                     events.push(Event {
-                        point: segment.p1.clone(),
+                        point: p1,
                         index: !i as i32,
                         swap: None,
                     });
                 }
                 _ => {
                     events.push(Event {
-                        point: segment.p1.clone(),
+                        point: p1,
                         index: i as i32,
                         swap: None,
                     });
                     events.push(Event {
-                        point: segment.p0.clone(),
+                        point: p0,
                         index: !i as i32,
                         swap: None,
                     });
@@ -200,10 +186,10 @@ impl ScanBeam {
                 }
             }
             match self.events.peek() {
-                None => { }
+                None => {}
                 Some(last_pt) => {
                     if pt == &last_pt.point {
-                        continue
+                        continue;
                     }
                 }
             }
