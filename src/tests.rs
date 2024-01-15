@@ -43,15 +43,30 @@ mod tests {
         }
         let mut beam = ScanBeam::new(segments);
         let table = beam.build();
+        println!("{:?}", table.actives);
+        println!("{:?}", table.events);
         for x in 0..1000 {
-            let actives = table.actives_at(x as f64, 0.0);
-            for active in 1..(actives.len() - 1) {
-                let prev = &beam.segments[active-1];
-                let line = &beam.segments[active];
-                let last_pos = prev.y_intercept(x as f64, 0.0);
-                let pos = line.y_intercept(x as f64, 0.0);
+            let x = x as f64;
+            let actives = table.actives_at(x, 0.0);
+            for i in 1..actives.len() {
+                let prev = &beam.segments[actives[i -1] as usize];
+                let line = &beam.segments[actives[i] as usize];
+                let pp0 = (&prev.p0).x;
+                let pp1 = (&prev.p1).x;
+                if &prev.p0.x < &prev.p1.x {
+                    println!("{pp0:?} {pp1:?} for {x:?}");
+                    assert!(x >= pp0);
+                    assert!(x <= pp1);
+                }
+                else {
+                    println!("{pp1:?} {pp0:?} for {x:?}");
+                    assert!(x >= pp1);
+                    assert!(x <= pp0);
+                }
+                let last_pos = prev.y_intercept(x, 0.0);
+                let pos = line.y_intercept(x, 0.0);
                 println!("{last_pos:?} {pos:?}");
-                assert!(last_pos >= pos);
+                assert!(last_pos <= pos);
             }
         }
     }

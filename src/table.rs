@@ -21,6 +21,10 @@ impl BeamTable {
                 return &self.actives[value];
             }
             Err(value) => {
+                if value == 0 {
+                    return &self.actives.last().expect("at least 1 active must exist.");
+                }
+                let value = value.checked_sub(1).unwrap();
                 return &self.actives[value];
             }
         }
