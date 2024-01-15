@@ -1,4 +1,5 @@
 use std::cmp::Ordering;
+use std::collections::BinaryHeap;
 use crate::events::Event;
 use crate::geometry::{Line, Point};
 use crate::table::BeamTable;
@@ -6,7 +7,7 @@ use crate::table::BeamTable;
 pub struct ScanBeam {
     pub segments: Vec<Line>,
     pub intersections: Vec<Point>,
-    pub events: Vec<Event>,
+    pub events: BinaryHeap<Event>,
     pub actives: Vec<i32>,
     checked_swaps: Vec<(i32, i32)>,
 }
@@ -15,7 +16,7 @@ impl ScanBeam {
     pub(crate) fn new(segments: Vec<Line>) -> ScanBeam {
         ScanBeam {
             segments,
-            events: Vec::new(),
+            events: BinaryHeap::new(),
             actives: Vec::new(),
             intersections: Vec::new(),
             checked_swaps: Vec::new(),
@@ -30,7 +31,7 @@ impl ScanBeam {
 
         ScanBeam {
             segments: segs,
-            events: Vec::new(),
+            events: BinaryHeap::new(),
             actives: Vec::new(),
             intersections: Vec::new(),
             checked_swaps: Vec::new(),
@@ -105,10 +106,7 @@ impl ScanBeam {
                     index: 0,
                     swap: Some((q, r)),
                 };
-                match self.events.binary_search(&event) {
-                    Ok(insert) => { self.events.insert(insert, event); }
-                    Err(insert) => { self.events.insert(insert, event); }
-                }
+                self.events.push(event);
             }
         }
     }
@@ -145,13 +143,12 @@ impl ScanBeam {
             }
         }
         // Sort the events start and end.
-        events.sort();
+        // events.sort();
 
         let mut bt = BeamTable::new();
-        let mut i: i32 = 0;
         // println!("{:?}", events);
-        while i < self.events.len() as i32 {
-            let event = &self.events[i as usize].clone();
+        while self.events.len() != 0 {
+            let event = self.events.pop().expect("Pop only called after checking events existed.");
             let idx = event.index;
             let index = event.index;
             let pt = &event.point;
@@ -189,9 +186,6 @@ impl ScanBeam {
                     }
                 }
             }
-            // println!("{:?}", self.actives);
-            i += 1;
-
             match bt.events.last() {
                 None => { }
                 Some(last_pt) => {
