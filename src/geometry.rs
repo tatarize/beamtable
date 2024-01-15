@@ -22,7 +22,7 @@ impl Eq for Point {}
 
 impl PartialEq<Self> for Point {
     fn eq(&self, other: &Self) -> bool {
-        return self.x == other.x && self.y == other.y;
+        return (self.x - other.x).abs() < 1e-12 && (self.y - other.y).abs() < 1e-12;
     }
 }
 
@@ -34,6 +34,9 @@ impl PartialOrd<Self> for Point {
 
 impl Ord for Point {
     fn cmp(&self, other: &Self) -> Ordering {
+        if other == self {
+            return Ordering::Equal
+        }
         if other.x < self.x {
             return Ordering::Greater;
         } else if other.x > self.x {
