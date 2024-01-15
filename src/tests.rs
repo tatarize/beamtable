@@ -53,7 +53,7 @@ mod tests {
                 let line = &beam.segments[actives[i] as usize];
                 let pp0 = (&prev.p0).x;
                 let pp1 = (&prev.p1).x;
-                if &prev.p0.x < &prev.p1.x {
+                if pp0 < pp1 {
                     // println!("{pp0:?} {pp1:?} for {x:?}");
                     assert!(x >= pp0);
                     assert!(x <= pp1);
@@ -62,6 +62,18 @@ mod tests {
                     // println!("{pp1:?} {pp0:?} for {x:?}");
                     assert!(x >= pp1);
                     assert!(x <= pp0);
+                }
+                let cp0 = (&line.p0).x;
+                let cp1 = (&line.p1).x;
+                if cp0 < cp1 {
+                    // println!("{cp0:?} {cp1:?} for {x:?}");
+                    assert!(x >= cp0);
+                    assert!(x <= cp1);
+                }
+                else {
+                    // println!("{cp1:?} {cp0:?} for {x:?}");
+                    assert!(x >= cp1);
+                    assert!(x <= cp0);
                 }
                 let last_pos = prev.y_intercept(x, 0.0);
                 let pos = line.y_intercept(x, 0.0);
