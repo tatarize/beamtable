@@ -51,6 +51,7 @@ impl Ord for Point {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct Geomstr {
     pub segments: Vec<((f64, f64), (f64, f64), (f64, f64), (f64, f64), (f64, f64))>,
 }
