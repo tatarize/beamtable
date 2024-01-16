@@ -104,8 +104,8 @@ impl ScanBeam {
         let segments = &self.segments;
         for i in 0..segments.segments.len() {
             let line = &self.segments.segments[i];
-            let p0 = Point::new(line.0.0, line.0.1);
-            let p1 = Point::new(line.4.0, line.4.1);
+            let p0 = Point::new(line.0 .0, line.0 .1);
+            let p1 = Point::new(line.4 .0, line.4 .1);
             match Point::cmp(&p0, &p1) {
                 Ordering::Less => {
                     events.push(Event {
@@ -139,7 +139,10 @@ impl ScanBeam {
         let mut bt = BeamTable::new();
         // println!("{:?}", events);
         while self.events.len() != 0 {
-            let event = self.events.pop().expect("Pop only called after checking events existed.");
+            let event = self
+                .events
+                .pop()
+                .expect("Pop only called after checking events existed.");
             let idx = event.index;
             let index = event.index;
             let pt = &event.point;

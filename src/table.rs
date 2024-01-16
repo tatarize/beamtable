@@ -5,7 +5,6 @@ pub struct BeamTable {
     pub actives: Vec<Vec<i32>>,
 }
 
-
 impl BeamTable {
     pub(crate) fn new() -> BeamTable {
         BeamTable {

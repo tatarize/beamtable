@@ -1,4 +1,4 @@
-use beamtable::geometry::Line;
+use beamtable::geometry::Geomstr;
 use beamtable::scanbeam::ScanBeam;
 use clap::Parser;
 use std::path::PathBuf;
@@ -27,7 +27,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let doc = vsvg::Document::from_svg(&args.path, true)?.flatten(vsvg::DEFAULT_TOLERANCE);
 
     // convert everything to lines
-    let lines: Vec<_> = doc
+    let mut segments = Geomstr::new();
+    let _: Vec<_> = doc
         .layers
         .values()
         .flat_map(|layer| {
@@ -39,11 +40,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             })
         })
         .enumerate()
-        .map(|(i, (p0, p1))| Line::new(p0, p1, i))
+        .map(|(i, (p0, p1))| segments.line(p0, p1, i as f64))
         .collect();
 
     // run scan beam algorithm
-    let mut scanbeam = ScanBeam::new(lines);
+    let mut scanbeam = ScanBeam::new(segments);
     let beam_table = scanbeam.build();
 
     //

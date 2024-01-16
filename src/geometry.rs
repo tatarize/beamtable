@@ -134,10 +134,10 @@ impl Geomstr {
             segments: Vec::new(),
         }
     }
-    pub fn from_segments(segments: Vec<((f64, f64), (f64, f64), (f64, f64), (f64, f64), (f64, f64))>) -> Geomstr {
-        Geomstr {
-            segments,
-        }
+    pub fn from_segments(
+        segments: Vec<((f64, f64), (f64, f64), (f64, f64), (f64, f64), (f64, f64))>,
+    ) -> Geomstr {
+        Geomstr { segments }
     }
 
     pub fn rect(&mut self, x: f64, y: f64, width: f64, height: f64, settings: f64) {
@@ -148,14 +148,15 @@ impl Geomstr {
     }
 
     pub fn line(&mut self, p0: (f64, f64), p1: (f64, f64), settings: f64) {
-        self.segments.push((p0, (0., 0.), (41.0, settings), (0., 0.), p1));
+        self.segments
+            .push((p0, (0., 0.), (41.0, settings), (0., 0.), p1));
     }
 
     /// Slope where divide by 0 is always negative infinity.
     pub fn slope(&self, index: usize) -> f64 {
         let line = &self.segments[index];
-        let rise: f64 = line.0.1 - line.4.1;
-        let run: f64 = line.0.0 - line.4.0;
+        let rise: f64 = line.0 .1 - line.4 .1;
+        let run: f64 = line.0 .0 - line.4 .0;
         if run == 0.0 {
             return f64::NEG_INFINITY;
         }
@@ -170,7 +171,9 @@ impl Geomstr {
         let c = &line1.0;
         let d = &line1.4;
         let denom: f64 = (d.1 - c.1) * (b.0 - a.0) - (d.0 - c.0) * (b.1 - a.1);
-        if denom.abs() < 1e-12 { return None; }
+        if denom.abs() < 1e-12 {
+            return None;
+        }
         let t1: f64 = ((d.0 - c.0) * (a.1 - c.1) - (d.1 - c.1) * (a.0 - c.0)) / denom;
         let t2: f64 = ((b.0 - a.0) * (a.1 - c.1) - (b.1 - a.1) * (a.0 - c.0)) / denom;
         if 0.0 <= t1 && t1 <= 1.0 && 0.0 <= t2 && t2 <= 1.0 {
@@ -199,6 +202,9 @@ impl Geomstr {
 
     pub fn point(&self, index: usize, t: f64) -> Point {
         let line = &self.segments[index];
-        Point::new(t * (line.4.0 - line.0.0) + line.0.0, t * (line.4.1 - line.0.1) + line.0.1)
+        Point::new(
+            t * (line.4 .0 - line.0 .0) + line.0 .0,
+            t * (line.4 .1 - line.0 .1) + line.0 .1,
+        )
     }
 }

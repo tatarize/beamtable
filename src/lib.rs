@@ -4,6 +4,7 @@ pub mod scanbeam;
 mod table;
 mod tests;
 
+use crate::geometry::Geomstr;
 use crate::scanbeam::ScanBeam;
 use pyo3::prelude::*;
 // #[pyclass]
@@ -38,7 +39,9 @@ use pyo3::prelude::*;
 //     Ok((segs, q.actives))
 // }
 #[pyfunction]
-fn build(segments: Vec<((f64, f64), (f64, f64), (f64, f64), (f64, f64), (f64, f64))>) -> (Vec<(f64, f64)>, Vec<Vec<i32>>) {
+fn build(
+    segments: Vec<((f64, f64), (f64, f64), (f64, f64), (f64, f64), (f64, f64))>,
+) -> (Vec<(f64, f64)>, Vec<Vec<i32>>) {
     let mut table = ScanBeam::new(Geomstr::from_segments(segments));
     let q = table.build();
 
@@ -48,7 +51,6 @@ fn build(segments: Vec<((f64, f64), (f64, f64), (f64, f64), (f64, f64), (f64, f6
     }
     (segs, q.actives)
 }
-
 
 /// A Python module implemented in Rust.
 #[pymodule]
