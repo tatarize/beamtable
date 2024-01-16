@@ -104,7 +104,7 @@ impl BeamTable {
             let mut active_mask = Vec::new();
             let mut inside = false;
             active_mask.push(inside);
-            for a in active {
+            for _a in active {
                 inside = !inside;
                 active_mask.push(inside);
             }
@@ -138,14 +138,23 @@ impl BeamTable {
 
     pub fn create(&self, mask: SpaceMask) -> Geomstr {
         let mut g = Geomstr::new();
-        for j in 1..self.events.len() -1 {
-            let prev_event = &self.events[j-1];
-            let curr_event = &self.events[j];
-            let beam_active = &self.actives[j-1];
-            for k in 1..beam_active.len() -1 {
-                let active = beam_active[k-1];
-                let p = mask.inside[j][k-1];
-                let c = mask.inside[j][k];
+        let inside = &mask.inside;
+        for j in 0..inside.len() -2 {
+            //mask exists at inside-1, but the final entry is actually pointless
+            let prev_event = &self.events[j];
+            let curr_event = &self.events[j+1];
+
+            let beam_active = &self.actives[j];
+            for k in 0..inside[j].len() -1 {
+                let active = beam_active[k];
+                let p = inside[j][k];
+                let c;
+                if k != inside[j].len() - 1 {
+                    c = inside[j][k + 1];
+                }
+                else {
+                    c = false;
+                }
                 if (p && !c) || (!p && c) {
                     //is a boundary.
                     let start = self.geometry.y_intercept(active as usize, prev_event.x, prev_event.y);
