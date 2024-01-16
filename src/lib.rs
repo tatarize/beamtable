@@ -1,11 +1,10 @@
 mod events;
 pub mod geometry;
-pub mod scanbeam;
-mod table;
+pub mod table;
 mod tests;
 
 use crate::geometry::Geomstr;
-use crate::scanbeam::ScanBeam;
+use crate::table::BeamTable;
 use pyo3::prelude::*;
 // #[pyclass]
 // struct BeamTable {
@@ -42,14 +41,14 @@ use pyo3::prelude::*;
 fn build(
     segments: Vec<((f64, f64), (f64, f64), (f64, f64), (f64, f64), (f64, f64))>,
 ) -> (Vec<(f64, f64)>, Vec<Vec<i32>>) {
-    let mut table = ScanBeam::new(Geomstr::from_segments(segments));
-    let q = table.build();
+    let mut table = BeamTable::new(Geomstr::from_segments(segments));
+    table.build();
 
     let mut segs = Vec::new();
-    for m in q.events.iter() {
+    for m in table.events.iter() {
         segs.push((m.x, m.y));
     }
-    (segs, q.actives)
+    (segs, table.actives)
 }
 
 /// A Python module implemented in Rust.

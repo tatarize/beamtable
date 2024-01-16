@@ -1,5 +1,7 @@
+use crate::events::Event;
 use crate::geometry::{Geomstr, Point};
-use std::collections::HashMap;
+use std::cmp::Ordering;
+use std::collections::{BinaryHeap, HashMap};
 use std::ops::{BitAnd, BitOr, Not};
 
 #[derive(Debug, Clone)]
@@ -66,14 +68,25 @@ pub struct BeamTable {
     pub geometry: Geomstr,
     pub events: Vec<Point>,
     pub actives: Vec<Vec<i32>>,
+    pub intersections: Vec<Point>,
+
+    s_events: BinaryHeap<Event>,
+    s_actives: Vec<i32>,
+    s_checked_swaps: Vec<(i32, i32)>,
+    built: bool,
 }
 
 impl BeamTable {
-    pub(crate) fn new(geometry: Geomstr) -> BeamTable {
+    pub fn new(geometry: Geomstr) -> BeamTable {
         BeamTable {
             geometry,
             events: Vec::new(),
             actives: Vec::new(),
+            intersections: Vec::new(),
+            s_events: BinaryHeap::new(),
+            s_actives: Vec::new(),
+            s_checked_swaps: Vec::new(),
+            built: false,
         }
     }
 
@@ -180,5 +193,183 @@ impl BeamTable {
                 return &self.actives[value];
             }
         }
+    }
+
+    /// Find the position within the actives for the current x.
+    fn bisect_yints(&self, x: i32, scanline: &Point) -> i32 {
+        let actives = &self.s_actives;
+        let geometry = &self.geometry;
+        let mut lo = 0;
+        let mut hi = actives.len();
+        let mut mid;
+        while lo < hi {
+            mid = (lo + hi) / 2;
+            let test = &geometry.y_intercept(actives[mid] as usize, scanline.x, scanline.y);
+            let value = &geometry.y_intercept(x as usize, scanline.x, scanline.y);
+            match Point::cmp(&value, &test) {
+                Ordering::Less => {
+                    hi = mid;
+                }
+                Ordering::Greater => {
+                    lo = mid + 1;
+                }
+                Ordering::Equal => {
+                    let test_slope = &geometry.slope(actives[mid] as usize);
+                    let value_slope = &geometry.slope(x as usize);
+                    if value_slope < test_slope {
+                        hi = mid
+                    } else {
+                        lo = mid + 1
+                    }
+                }
+            }
+        }
+        lo as i32
+    }
+
+    /// Check for intersections between q and r, occurring after sl
+    fn check_intersections(&mut self, q: usize, r: usize, sl: &Point) {
+        let actives = &self.s_actives;
+        let q = actives[q];
+        let r = actives[r];
+        let geometry = &self.geometry;
+        let checked_swaps = &mut self.s_checked_swaps;
+        // println!("{q} {r}");
+        if checked_swaps.contains(&(q, r)) {
+            return;
+        }
+        let intersection = geometry.get_intersection(q as usize, r as usize);
+
+        match intersection {
+            None => (),
+            Some(t) => {
+                let t1 = t.0;
+                let t2 = t.1;
+                // println!("{t1}, {t2}");
+                if (t1 == 0.0 || t1 == 1.0) && ((t2 == 0.0) || (t2 == 1.0)) {
+                    return;
+                }
+                let pt_intersect = geometry.point(q as usize, t1);
+                self.intersections.push(pt_intersect.clone());
+                match Point::cmp(&sl, &pt_intersect) {
+                    Ordering::Greater => {
+                        return;
+                    }
+                    Ordering::Equal => {
+                        return;
+                    }
+                    Ordering::Less => {}
+                }
+                checked_swaps.push((q, r));
+                let event = Event {
+                    point: pt_intersect,
+                    index: 0,
+                    swap: Some((q, r)),
+                };
+                self.s_events.push(event);
+            }
+        }
+    }
+
+    pub fn build(&mut self) {
+        if self.built {
+            //This was already built.
+            return;
+        }
+        let events = &mut self.s_events;
+        for i in 0..self.geometry.segments.len() {
+            let line = &self.geometry.segments[i];
+            let p0 = Point::new(line.0 .0, line.0 .1);
+            let p1 = Point::new(line.4 .0, line.4 .1);
+            match Point::cmp(&p0, &p1) {
+                Ordering::Less => {
+                    events.push(Event {
+                        point: p0,
+                        index: i as i32,
+                        swap: None,
+                    });
+                    events.push(Event {
+                        point: p1,
+                        index: !i as i32,
+                        swap: None,
+                    });
+                }
+                _ => {
+                    events.push(Event {
+                        point: p1,
+                        index: i as i32,
+                        swap: None,
+                    });
+                    events.push(Event {
+                        point: p0,
+                        index: !i as i32,
+                        swap: None,
+                    });
+                }
+            }
+        }
+
+        while self.s_events.len() != 0 {
+            let event = self
+                .s_events
+                .pop()
+                .expect("Pop only called after checking events existed.");
+            let idx = event.index;
+            let index = event.index;
+            let pt = &event.point;
+            match event.swap {
+                None => {
+                    if idx >= 0 {
+                        // Insert.
+                        let ip = self.bisect_yints(index, &event.point) as usize;
+                        self.s_actives.insert(ip, index);
+                        if ip > 0 {
+                            self.check_intersections(ip - 1, ip, pt)
+                        }
+                        if ip < self.s_actives.len() - 1 {
+                            self.check_intersections(ip, ip + 1, pt)
+                        }
+                    } else {
+                        //Remove.
+                        let rp = self
+                            .s_actives
+                            .iter()
+                            .position(|&e| e == !index)
+                            .expect("Was added should remove.");
+                        self.s_actives.remove(rp);
+                        if 0 < rp && rp < self.s_actives.len() {
+                            self.check_intersections(rp - 1, rp, pt)
+                        }
+                    }
+                }
+                Some((s1, _)) => {
+                    let s1 = self
+                        .s_actives
+                        .iter()
+                        .position(|&e| e == s1)
+                        .expect("Swap pos should exist.");
+                    let s2 = s1 + 1;
+                    self.s_actives.swap(s1, s2);
+                    if s1 > 0 {
+                        self.check_intersections(s1 - 1, s1, pt);
+                    }
+                    if s2 < self.s_actives.len() - 1 {
+                        self.check_intersections(s2, s2 + 1, pt);
+                    }
+                }
+            }
+            match self.s_events.peek() {
+                None => {}
+                Some(last_pt) => {
+                    if pt == &last_pt.point {
+                        continue;
+                    }
+                }
+            }
+
+            self.events.push((*pt).clone());
+            self.actives.push(self.s_actives.clone());
+        }
+        self.built = true;
     }
 }
