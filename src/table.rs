@@ -146,7 +146,7 @@ impl BeamTable {
     pub fn create(&self, mask: BoolOp) -> Geomstr {
         let mut g = Geomstr::new();
         let inside = &mask.inside;
-        for j in 0..inside.len() - 2 {
+        for j in 0..inside.len() - 1 {
             //mask exists at inside-1, but the final entry is actually pointless
             let prev_event = &self.events[j];
             let curr_event = &self.events[j + 1];

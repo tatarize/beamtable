@@ -41,7 +41,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // run scan beam algorithm
     let mut beamtable = BeamTable::new(segments);
     beamtable.build();
-    // let mask = beam_table.evenodd_fill(20.0);
+    // let mask = beamtable.evenodd_fill(20.0);
     let mask = beamtable.union_all();
     let geom = beamtable.create(mask);
 
