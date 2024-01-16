@@ -98,7 +98,24 @@ impl BeamTable {
     }
 
     pub fn create(&self, mask: SpaceMask) -> Geomstr {
-        Geomstr::new()
+        let mut g = Geomstr::new();
+        for j in 1..mask.inside.len() - 1 {
+            let prev_event = &self.events[j-1];
+            let curr_event = &self.events[j];
+            for k in 1..mask.inside[j].len() - 1 {
+                let active = self.actives[j][k];
+                let p = mask.inside[j][k-1];
+                let c = mask.inside[j][k];
+                if (p && !c) || (!p && c) {
+                    //is a boundary.
+                    let start = self.geometry.y_intercept(active as usize, prev_event.x, prev_event.y);
+                    let end = self.geometry.y_intercept(active as usize, curr_event.x, curr_event.y);
+                    let line = &self.geometry.segments[active as usize];
+                    g.line((start.x, start.y), (end.x, end.y), line.2.1);
+                }
+            }
+        }
+        g
     }
 
     pub fn actives_at(&self, x: f64, y: f64) -> &Vec<i32> {
