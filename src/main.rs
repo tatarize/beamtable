@@ -28,24 +28,22 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // convert everything to lines
     let mut segments = Geomstr::new();
-    let _: Vec<_> = doc
-        .layers
-        .values()
-        .flat_map(|layer| {
-            layer.paths.iter().flat_map(|path| {
-                path.data
-                    .points()
-                    .windows(2)
-                    .map(|p| ((p[0].x(), p[0].y()), (p[1].x(), p[1].y())))
-            })
-        })
-        .enumerate()
-        .map(|(i, (p0, p1))| segments.line(p0, p1, i as f64))
-        .collect();
+    let mut idx = 0;
+    doc.layers.values().for_each(|layer| {
+        layer.paths.iter().for_each(|path| {
+            path.data.points().windows(2).for_each(|p| {
+                segments.line((p[0].x(), p[0].y()), (p[1].x(), p[1].y()), idx as f64);
+            });
+            idx += 1;
+        });
+    });
 
     // run scan beam algorithm
     let mut scanbeam = ScanBeam::new(segments);
     let beam_table = scanbeam.build();
+    // let mask = beam_table.evenodd_fill(20.0);
+    let mask = beam_table.union_all();
+    let geom = beam_table.create(mask);
 
     //
     // visualize the result
@@ -53,7 +51,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // convert back to regular (not flattened) document, merge everything to layer 0 and normalize
     // line width and color
-    let mut doc = vsvg::Document::from(doc);
+    let mut doc = vsvg::Document::default();
+
+    let layer = doc.get_mut(1);
+    for line in geom.segments {
+        layer.line(line.0 .0, line.0 .1, line.4 .0, line.4 .1);
+    }
+
     doc.merge_layers();
     doc.for_each(|layer| {
         layer.for_each(|path| {
@@ -62,10 +66,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         });
     });
 
-    let layer = doc.get_mut(1);
-    for event in beam_table.events {
-        layer.circle(event.x, event.y, 0.5);
-    }
+    // let layer = doc.get_mut(1);
+    // for event in beam_table.events {
+    //     layer.circle(event.x, event.y, 0.5);
+    // }
 
     if let Some(path) = args.save {
         // work around https://github.com/abey79/vsvg/issues/114
