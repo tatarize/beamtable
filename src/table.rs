@@ -70,8 +70,6 @@ pub struct BeamTable {
     pub actives: Vec<Vec<i32>>,
     pub intersections: Vec<Point>,
 
-    s_events: BinaryHeap<Event>,
-    s_checked_swaps: Vec<(i32, i32)>,
     built: bool,
 }
 
@@ -82,8 +80,6 @@ impl BeamTable {
             events: Vec::new(),
             actives: Vec::new(),
             intersections: Vec::new(),
-            s_events: BinaryHeap::new(),
-            s_checked_swaps: Vec::new(),
             built: false,
         }
     }
@@ -225,12 +221,10 @@ impl BeamTable {
     }
 
     /// Check for intersections between q and r, occurring after sl
-    fn check_intersections(&mut self, actives: &Vec<i32>, q: usize, r: usize, sl: &Point) {
+    fn check_intersections(&mut self, events: &mut BinaryHeap<Event>, actives: &mut Vec<i32>, checked_swaps: &mut Vec<(i32, i32)>, q: usize, r: usize, sl: &Point) {
         let q = actives[q];
         let r = actives[r];
         let geometry = &self.geometry;
-        let checked_swaps = &mut self.s_checked_swaps;
-        // println!("{q} {r}");
         if checked_swaps.contains(&(q, r)) {
             return;
         }
@@ -262,7 +256,7 @@ impl BeamTable {
                     index: 0,
                     swap: Some((q, r)),
                 };
-                self.s_events.push(event);
+                events.push(event);
             }
         }
     }
@@ -272,8 +266,10 @@ impl BeamTable {
             //This was already built.
             return;
         }
+        let mut events: BinaryHeap<Event > = BinaryHeap::new();
+        let mut checked_swaps: Vec<(i32, i32)> = Vec::new();
         let mut actives: Vec<i32> = Vec::new();
-        let events = &mut self.s_events;
+
         for i in 0..self.geometry.segments.len() {
             let line = &self.geometry.segments[i];
             let p0 = Point::new(line.0 .0, line.0 .1);
@@ -306,9 +302,8 @@ impl BeamTable {
             }
         }
 
-        while self.s_events.len() != 0 {
-            let event = self
-                .s_events
+        while events.len() != 0 {
+            let event = events
                 .pop()
                 .expect("Pop only called after checking events existed.");
             let idx = event.index;
@@ -321,10 +316,10 @@ impl BeamTable {
                         let ip = self.bisect_yints(&actives, index, &event.point) as usize;
                         actives.insert(ip, index);
                         if ip > 0 {
-                            self.check_intersections(&actives, ip - 1, ip, pt)
+                            self.check_intersections(&mut events, &mut actives, &mut checked_swaps, ip - 1, ip, pt)
                         }
                         if ip < actives.len() - 1 {
-                            self.check_intersections(&actives, ip, ip + 1, pt)
+                            self.check_intersections(&mut events, &mut actives, &mut checked_swaps, ip, ip + 1, pt)
                         }
                     } else {
                         //Remove.
@@ -334,7 +329,7 @@ impl BeamTable {
                             .expect("Was added should remove.");
                         actives.remove(rp);
                         if 0 < rp && rp < actives.len() {
-                            self.check_intersections(&actives, rp - 1, rp, pt)
+                            self.check_intersections(&mut events, &mut actives, &mut checked_swaps, rp - 1, rp, pt)
                         }
                     }
                 }
@@ -346,14 +341,14 @@ impl BeamTable {
                     let s2 = s1 + 1;
                     actives.swap(s1, s2);
                     if s1 > 0 {
-                        self.check_intersections(&actives, s1 - 1, s1, pt);
+                        self.check_intersections(&mut events, &mut actives, &mut checked_swaps, s1 - 1, s1, pt);
                     }
                     if s2 < actives.len() - 1 {
-                        self.check_intersections(&actives, s2, s2 + 1, pt);
+                        self.check_intersections(&mut events, &mut actives, &mut checked_swaps, s2, s2 + 1, pt);
                     }
                 }
             }
-            match self.s_events.peek() {
+            match events.peek() {
                 None => {}
                 Some(last_pt) => {
                     if pt == &last_pt.point {
