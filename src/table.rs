@@ -221,7 +221,15 @@ impl BeamTable {
     }
 
     /// Check for intersections between q and r, occurring after sl
-    fn check_intersections(&mut self, events: &mut BinaryHeap<Event>, actives: &mut Vec<i32>, checked_swaps: &mut Vec<(i32, i32)>, q: usize, r: usize, sl: &Point) {
+    fn check_intersections(
+        &mut self,
+        events: &mut BinaryHeap<Event>,
+        actives: &Vec<i32>,
+        checked_swaps: &mut Vec<(i32, i32)>,
+        q: usize,
+        r: usize,
+        sl: &Point,
+    ) {
         let q = actives[q];
         let r = actives[r];
         let geometry = &self.geometry;
@@ -266,7 +274,7 @@ impl BeamTable {
             //This was already built.
             return;
         }
-        let mut events: BinaryHeap<Event > = BinaryHeap::new();
+        let mut events: BinaryHeap<Event> = BinaryHeap::new();
         let mut checked_swaps: Vec<(i32, i32)> = Vec::new();
         let mut actives: Vec<i32> = Vec::new();
 
@@ -316,10 +324,24 @@ impl BeamTable {
                         let ip = self.bisect_yints(&actives, index, &event.point) as usize;
                         actives.insert(ip, index);
                         if ip > 0 {
-                            self.check_intersections(&mut events, &mut actives, &mut checked_swaps, ip - 1, ip, pt)
+                            self.check_intersections(
+                                &mut events,
+                                &actives,
+                                &mut checked_swaps,
+                                ip - 1,
+                                ip,
+                                pt,
+                            )
                         }
                         if ip < actives.len() - 1 {
-                            self.check_intersections(&mut events, &mut actives, &mut checked_swaps, ip, ip + 1, pt)
+                            self.check_intersections(
+                                &mut events,
+                                &actives,
+                                &mut checked_swaps,
+                                ip,
+                                ip + 1,
+                                pt,
+                            )
                         }
                     } else {
                         //Remove.
@@ -329,7 +351,14 @@ impl BeamTable {
                             .expect("Was added should remove.");
                         actives.remove(rp);
                         if 0 < rp && rp < actives.len() {
-                            self.check_intersections(&mut events, &mut actives, &mut checked_swaps, rp - 1, rp, pt)
+                            self.check_intersections(
+                                &mut events,
+                                &actives,
+                                &mut checked_swaps,
+                                rp - 1,
+                                rp,
+                                pt,
+                            )
                         }
                     }
                 }
@@ -341,10 +370,24 @@ impl BeamTable {
                     let s2 = s1 + 1;
                     actives.swap(s1, s2);
                     if s1 > 0 {
-                        self.check_intersections(&mut events, &mut actives, &mut checked_swaps, s1 - 1, s1, pt);
+                        self.check_intersections(
+                            &mut events,
+                            &actives,
+                            &mut checked_swaps,
+                            s1 - 1,
+                            s1,
+                            pt,
+                        );
                     }
                     if s2 < actives.len() - 1 {
-                        self.check_intersections(&mut events, &mut actives, &mut checked_swaps, s2, s2 + 1, pt);
+                        self.check_intersections(
+                            &mut events,
+                            &actives,
+                            &mut checked_swaps,
+                            s2,
+                            s2 + 1,
+                            pt,
+                        );
                     }
                 }
             }
