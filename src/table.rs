@@ -148,28 +148,23 @@ impl BeamTable {
         let inside = &mask.inside;
         for j in 0..inside.len() - 1 {
             //mask exists at inside-1, but the final entry is actually pointless
-            let prev_event = &self.events[j];
-            let curr_event = &self.events[j + 1];
-
+            let left_event = &self.events[j];
             let beam_active = &self.actives[j];
+            let right_event = &self.events[j + 1];
+
             for k in 0..inside[j].len() - 1 {
-                let active = beam_active[k];
-                let p = inside[j][k];
-                let c;
-                if k != inside[j].len() - 1 {
-                    c = inside[j][k + 1];
-                } else {
-                    c = false;
-                }
-                if (p && !c) || (!p && c) {
+                let below_space = inside[j][k];
+                let segment_active = beam_active[k];
+                let above_space = inside[j][k + 1];
+                if (below_space && !above_space) || (!below_space && above_space) {
                     //is a boundary.
                     let start =
                         self.geometry
-                            .y_intercept(active as usize, prev_event.x, prev_event.y);
+                            .y_intercept(segment_active as usize, left_event.x, left_event.y);
                     let end =
                         self.geometry
-                            .y_intercept(active as usize, curr_event.x, curr_event.y);
-                    let line = &self.geometry.segments[active as usize];
+                            .y_intercept(segment_active as usize, right_event.x, right_event.y);
+                    let line = &self.geometry.segments[segment_active as usize];
                     g.line((start.x, start.y), (end.x, end.y), line.2 .1);
                 }
             }
