@@ -97,6 +97,10 @@ impl BeamTable {
         SpaceMask::new(spacemask)
     }
 
+    pub fn create(&self, mask: SpaceMask) -> Geomstr {
+        Geomstr::new()
+    }
+
     pub fn actives_at(&self, x: f64, y: f64) -> &Vec<i32> {
         let idx = self.events.binary_search(&Point::new(x, y));
         match idx {

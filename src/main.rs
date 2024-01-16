@@ -46,6 +46,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // run scan beam algorithm
     let mut scanbeam = ScanBeam::new(segments);
     let beam_table = scanbeam.build();
+    let mask1 = beam_table.evenodd_fill(1.0);
+    let mask2 = beam_table.evenodd_fill(2.0);
+    let mask10 = beam_table.evenodd_fill(10.0);
+    let q = mask1 | mask2 | mask10;
+
+    let geom = beam_table.create(q);
 
     //
     // visualize the result
