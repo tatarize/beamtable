@@ -28,20 +28,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // convert everything to lines
     let mut segments = Geomstr::new();
-    let _: Vec<_> = doc
-        .layers
-        .values()
-        .flat_map(|layer| {
-            layer.paths.iter().flat_map(|path| {
-                path.data
-                    .points()
-                    .windows(2)
-                    .map(|p| ((p[0].x(), p[0].y()), (p[1].x(), p[1].y())))
-            })
-        })
-        .enumerate()
-        .map(|(i, (p0, p1))| segments.line(p0, p1, i as f64))
-        .collect();
+    let mut idx = 0;
+    doc.layers.values().for_each(|layer| {
+        layer.paths.iter().for_each(|path| {
+            path.data.points().windows(2).for_each(|p| {
+                segments.line((p[0].x(), p[0].y()), (p[1].x(), p[1].y()), idx as f64);
+            });
+            idx += 1;
+        });
+    });
 
     // run scan beam algorithm
     let mut scanbeam = ScanBeam::new(segments);
@@ -51,7 +46,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mask10 = beam_table.evenodd_fill(10.0);
     let q = mask1 | mask2 | mask10;
 
-    let geom = beam_table.create(q);
+    let mask = beam_table.union_all();
+    // let mask = beam_table.even_odd_ignoring_origin();
+    // println!("{:?}", mask.inside);
+    let geom = beam_table.create(mask);
 
     //
     // visualize the result
