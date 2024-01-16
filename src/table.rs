@@ -65,26 +65,28 @@ impl Not for SpaceMask {
 
 #[derive(Debug, Clone)]
 pub struct BeamTable {
+    pub geometry: Geomstr,
     pub events: Vec<Point>,
     pub actives: Vec<Vec<i32>>,
 }
 
 impl BeamTable {
-    pub(crate) fn new() -> BeamTable {
+    pub(crate) fn new(geometry: Geomstr) -> BeamTable {
         BeamTable {
+            geometry,
             events: Vec::new(),
             actives: Vec::new(),
         }
     }
 
-    pub fn evenodd_fill(&self, geometry: Geomstr, settings: f64) -> SpaceMask {
-        let spacemask = Vec::new();
+    pub fn evenodd_fill(&self, settings: f64) -> SpaceMask {
+        let mut spacemask = Vec::new();
         for active in &self.actives {
-            let active_mask = Vec::new();
+            let mut active_mask = Vec::new();
             let mut inside = false;
             active_mask.push(inside);
             for a in active {
-                let line = &geometry.segments[a];
+                let line = &self.geometry.segments[*a as usize];
                 if line.2.1 == settings {
                     inside = !inside;
                 }
