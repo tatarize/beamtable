@@ -101,8 +101,7 @@ impl ScanBeam {
 
     pub fn build(&mut self) -> BeamTable {
         let events = &mut self.events;
-        let segments = &self.segments;
-        for i in 0..segments.segments.len() {
+        for i in 0..self.segments.segments.len() {
             let line = &self.segments.segments[i];
             let p0 = Point::new(line.0 .0, line.0 .1);
             let p1 = Point::new(line.4 .0, line.4 .1);
@@ -136,7 +135,8 @@ impl ScanBeam {
         // Sort the events start and end.
         // events.sort();
 
-        let mut bt = BeamTable::new();
+        let mut bt = BeamTable::new(self.segments.clone());
+        // let segments = &bt.geometry.segments;
         // println!("{:?}", events);
         while self.events.len() != 0 {
             let event = self
