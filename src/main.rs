@@ -55,7 +55,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let layer = doc.get_mut(1);
     for line in geom.segments {
-        layer.line(line.0.0, line.0.1, line.4.0, line.4.1);
+        layer.line(line.0 .0, line.0 .1, line.4 .0, line.4 .1);
     }
 
     doc.merge_layers();

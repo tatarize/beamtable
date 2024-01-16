@@ -1,6 +1,6 @@
+use crate::geometry::{Geomstr, Point};
 use std::collections::HashMap;
 use std::ops::{BitAnd, BitOr, Not};
-use crate::geometry::{Geomstr, Point};
 
 #[derive(Debug, Clone)]
 pub struct SpaceMask {
@@ -9,9 +9,7 @@ pub struct SpaceMask {
 
 impl SpaceMask {
     pub fn new(mask: Vec<Vec<bool>>) -> SpaceMask {
-        SpaceMask {
-            inside: mask,
-        }
+        SpaceMask { inside: mask }
     }
 }
 
@@ -30,7 +28,6 @@ impl BitAnd for SpaceMask {
         Self::new(n)
     }
 }
-
 
 impl BitOr for SpaceMask {
     type Output = Self;
@@ -88,7 +85,7 @@ impl BeamTable {
             active_mask.push(inside);
             for a in active {
                 let line = &self.geometry.segments[*a as usize];
-                if line.2.1 == settings {
+                if line.2 .1 == settings {
                     inside = !inside;
                 }
                 active_mask.push(inside);
@@ -121,12 +118,11 @@ impl BeamTable {
             active_mask.push(set.len() != 0);
             for a in active {
                 let line = &self.geometry.segments[*a as usize];
-                if set.contains_key(&(line.2.1 as i32)) {
-                    set.remove(&(line.2.1 as i32));
+                if set.contains_key(&(line.2 .1 as i32)) {
+                    set.remove(&(line.2 .1 as i32));
                     // println!("Removed {:?}", set);
-                }
-                else {
-                    set.insert(line.2.1 as i32, true);
+                } else {
+                    set.insert(line.2 .1 as i32, true);
                     // println!("Added {:?}", set);
                 }
                 active_mask.push(set.len() != 0);
@@ -139,28 +135,31 @@ impl BeamTable {
     pub fn create(&self, mask: SpaceMask) -> Geomstr {
         let mut g = Geomstr::new();
         let inside = &mask.inside;
-        for j in 0..inside.len() -2 {
+        for j in 0..inside.len() - 2 {
             //mask exists at inside-1, but the final entry is actually pointless
             let prev_event = &self.events[j];
-            let curr_event = &self.events[j+1];
+            let curr_event = &self.events[j + 1];
 
             let beam_active = &self.actives[j];
-            for k in 0..inside[j].len() -1 {
+            for k in 0..inside[j].len() - 1 {
                 let active = beam_active[k];
                 let p = inside[j][k];
                 let c;
                 if k != inside[j].len() - 1 {
                     c = inside[j][k + 1];
-                }
-                else {
+                } else {
                     c = false;
                 }
                 if (p && !c) || (!p && c) {
                     //is a boundary.
-                    let start = self.geometry.y_intercept(active as usize, prev_event.x, prev_event.y);
-                    let end = self.geometry.y_intercept(active as usize, curr_event.x, curr_event.y);
+                    let start =
+                        self.geometry
+                            .y_intercept(active as usize, prev_event.x, prev_event.y);
+                    let end =
+                        self.geometry
+                            .y_intercept(active as usize, curr_event.x, curr_event.y);
                     let line = &self.geometry.segments[active as usize];
-                    g.line((start.x, start.y), (end.x, end.y), line.2.1);
+                    g.line((start.x, start.y), (end.x, end.y), line.2 .1);
                 }
             }
         }
