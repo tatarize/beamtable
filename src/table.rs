@@ -98,6 +98,21 @@ impl BeamTable {
         SpaceMask::new(spacemask)
     }
 
+    pub fn even_odd_ignoring_origin(&self) -> SpaceMask {
+        let mut spacemask = Vec::new();
+        for active in &self.actives {
+            let mut active_mask = Vec::new();
+            let mut inside = false;
+            active_mask.push(inside);
+            for a in active {
+                inside = !inside;
+                active_mask.push(inside);
+            }
+            spacemask.push(active_mask);
+        }
+        SpaceMask::new(spacemask)
+    }
+
     pub fn union_all(&self) -> SpaceMask {
         let mut spacemask = Vec::new();
         for active in &self.actives {
