@@ -41,14 +41,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // run scan beam algorithm
     let mut scanbeam = ScanBeam::new(segments);
     let beam_table = scanbeam.build();
-    let mask1 = beam_table.evenodd_fill(1.0);
-    let mask2 = beam_table.evenodd_fill(2.0);
-    let mask10 = beam_table.evenodd_fill(10.0);
-    let q = mask1 | mask2 | mask10;
-
+    // let mask = beam_table.evenodd_fill(20.0);
     let mask = beam_table.union_all();
-    // let mask = beam_table.even_odd_ignoring_origin();
-    // println!("{:?}", mask.inside);
     let geom = beam_table.create(mask);
 
     //
@@ -72,10 +66,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         });
     });
 
-    let layer = doc.get_mut(1);
-    for event in beam_table.events {
-        layer.circle(event.x, event.y, 0.5);
-    }
+    // let layer = doc.get_mut(1);
+    // for event in beam_table.events {
+    //     layer.circle(event.x, event.y, 0.5);
+    // }
 
     if let Some(path) = args.save {
         // work around https://github.com/abey79/vsvg/issues/114
