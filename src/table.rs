@@ -138,11 +138,12 @@ impl BeamTable {
 
     pub fn create(&self, mask: SpaceMask) -> Geomstr {
         let mut g = Geomstr::new();
-        for j in 1..mask.inside.len() - 1 {
+        for j in 1..self.events.len() -1 {
             let prev_event = &self.events[j-1];
             let curr_event = &self.events[j];
-            for k in 1..mask.inside[j].len() - 1 {
-                let active = self.actives[j][k];
+            let beam_active = &self.actives[j-1];
+            for k in 1..beam_active.len() -1 {
+                let active = beam_active[k-1];
                 let p = mask.inside[j][k-1];
                 let c = mask.inside[j][k];
                 if (p && !c) || (!p && c) {
