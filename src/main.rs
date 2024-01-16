@@ -59,7 +59,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // convert back to regular (not flattened) document, merge everything to layer 0 and normalize
     // line width and color
-    let mut doc = vsvg::Document::from(doc);
+    let mut doc = vsvg::Document::default();
+
+    let layer = doc.get_mut(1);
+    for line in geom.segments {
+        layer.line(line.0.0, line.0.1, line.4.0, line.4.1);
+    }
+
     doc.merge_layers();
     doc.for_each(|layer| {
         layer.for_each(|path| {
