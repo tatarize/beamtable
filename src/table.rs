@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::ops::{BitAnd, BitOr, Not};
 use crate::geometry::{Geomstr, Point};
 
@@ -91,6 +92,29 @@ impl BeamTable {
                     inside = !inside;
                 }
                 active_mask.push(inside);
+            }
+            spacemask.push(active_mask);
+        }
+        SpaceMask::new(spacemask)
+    }
+
+    pub fn union_all(&self) -> SpaceMask {
+        let mut spacemask = Vec::new();
+        for active in &self.actives {
+            let mut set: HashMap<i32, bool> = HashMap::new();
+            let mut active_mask = Vec::new();
+            active_mask.push(set.len() != 0);
+            for a in active {
+                let line = &self.geometry.segments[*a as usize];
+                if set.contains_key(&(line.2.1 as i32)) {
+                    set.remove(&(line.2.1 as i32));
+                    // println!("Removed {:?}", set);
+                }
+                else {
+                    set.insert(line.2.1 as i32, true);
+                    // println!("Added {:?}", set);
+                }
+                active_mask.push(set.len() != 0);
             }
             spacemask.push(active_mask);
         }
