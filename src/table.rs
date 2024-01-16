@@ -71,7 +71,6 @@ pub struct BeamTable {
     pub intersections: Vec<Point>,
 
     s_events: BinaryHeap<Event>,
-    s_actives: Vec<i32>,
     s_checked_swaps: Vec<(i32, i32)>,
     built: bool,
 }
@@ -84,7 +83,6 @@ impl BeamTable {
             actives: Vec::new(),
             intersections: Vec::new(),
             s_events: BinaryHeap::new(),
-            s_actives: Vec::new(),
             s_checked_swaps: Vec::new(),
             built: false,
         }
@@ -196,8 +194,7 @@ impl BeamTable {
     }
 
     /// Find the position within the actives for the current x.
-    fn bisect_yints(&self, x: i32, scanline: &Point) -> i32 {
-        let actives = &self.s_actives;
+    fn bisect_yints(&self, actives: &Vec<i32>, x: i32, scanline: &Point) -> i32 {
         let geometry = &self.geometry;
         let mut lo = 0;
         let mut hi = actives.len();
@@ -228,8 +225,7 @@ impl BeamTable {
     }
 
     /// Check for intersections between q and r, occurring after sl
-    fn check_intersections(&mut self, q: usize, r: usize, sl: &Point) {
-        let actives = &self.s_actives;
+    fn check_intersections(&mut self, actives: &Vec<i32>, q: usize, r: usize, sl: &Point) {
         let q = actives[q];
         let r = actives[r];
         let geometry = &self.geometry;
@@ -276,6 +272,7 @@ impl BeamTable {
             //This was already built.
             return;
         }
+        let mut actives: Vec<i32> = Vec::new();
         let events = &mut self.s_events;
         for i in 0..self.geometry.segments.len() {
             let line = &self.geometry.segments[i];
@@ -321,40 +318,38 @@ impl BeamTable {
                 None => {
                     if idx >= 0 {
                         // Insert.
-                        let ip = self.bisect_yints(index, &event.point) as usize;
-                        self.s_actives.insert(ip, index);
+                        let ip = self.bisect_yints(&actives, index, &event.point) as usize;
+                        actives.insert(ip, index);
                         if ip > 0 {
-                            self.check_intersections(ip - 1, ip, pt)
+                            self.check_intersections(&actives, ip - 1, ip, pt)
                         }
-                        if ip < self.s_actives.len() - 1 {
-                            self.check_intersections(ip, ip + 1, pt)
+                        if ip < actives.len() - 1 {
+                            self.check_intersections(&actives, ip, ip + 1, pt)
                         }
                     } else {
                         //Remove.
-                        let rp = self
-                            .s_actives
+                        let rp = actives
                             .iter()
                             .position(|&e| e == !index)
                             .expect("Was added should remove.");
-                        self.s_actives.remove(rp);
-                        if 0 < rp && rp < self.s_actives.len() {
-                            self.check_intersections(rp - 1, rp, pt)
+                        actives.remove(rp);
+                        if 0 < rp && rp < actives.len() {
+                            self.check_intersections(&actives, rp - 1, rp, pt)
                         }
                     }
                 }
                 Some((s1, _)) => {
-                    let s1 = self
-                        .s_actives
+                    let s1 = actives
                         .iter()
                         .position(|&e| e == s1)
                         .expect("Swap pos should exist.");
                     let s2 = s1 + 1;
-                    self.s_actives.swap(s1, s2);
+                    actives.swap(s1, s2);
                     if s1 > 0 {
-                        self.check_intersections(s1 - 1, s1, pt);
+                        self.check_intersections(&actives, s1 - 1, s1, pt);
                     }
-                    if s2 < self.s_actives.len() - 1 {
-                        self.check_intersections(s2, s2 + 1, pt);
+                    if s2 < actives.len() - 1 {
+                        self.check_intersections(&actives, s2, s2 + 1, pt);
                     }
                 }
             }
@@ -368,7 +363,7 @@ impl BeamTable {
             }
 
             self.events.push((*pt).clone());
-            self.actives.push(self.s_actives.clone());
+            self.actives.push(actives.clone());
         }
         self.built = true;
     }
