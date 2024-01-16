@@ -1,6 +1,7 @@
-use vsvg::exports::egui::Shape::Vec;
+use std::ops::{BitAnd, BitOr, Not};
 use crate::geometry::{Geomstr, Point};
 
+#[derive(Debug, Clone)]
 pub struct SpaceMask {
     pub inside: Vec<Vec<bool>>,
 }
@@ -13,6 +14,56 @@ impl SpaceMask {
     }
 }
 
+impl BitAnd for SpaceMask {
+    type Output = Self;
+
+    fn bitand(self, rhs: Self) -> Self::Output {
+        let mut n = Vec::new();
+        for j in 0..rhs.inside.len() {
+            let mut m = Vec::new();
+            for k in 0..rhs.inside[j].len() {
+                m.push(self.inside[j][k] & rhs.inside[j][k]);
+            }
+            n.push(m);
+        }
+        Self::new(n)
+    }
+}
+
+
+impl BitOr for SpaceMask {
+    type Output = Self;
+
+    fn bitor(self, rhs: Self) -> Self::Output {
+        let mut n = Vec::new();
+        for j in 0..rhs.inside.len() {
+            let mut m = Vec::new();
+            for k in 0..rhs.inside[j].len() {
+                m.push(self.inside[j][k] | rhs.inside[j][k]);
+            }
+            n.push(m);
+        }
+        Self::new(n)
+    }
+}
+
+impl Not for SpaceMask {
+    type Output = Self;
+
+    fn not(self) -> Self::Output {
+        let mut n = Vec::new();
+        for j in 0..self.inside.len() {
+            let mut m = Vec::new();
+            for k in 0..self.inside[j].len() {
+                m.push(!self.inside[j][k]);
+            }
+            n.push(m);
+        }
+        Self::new(n)
+    }
+}
+
+#[derive(Debug, Clone)]
 pub struct BeamTable {
     pub events: Vec<Point>,
     pub actives: Vec<Vec<i32>>,
