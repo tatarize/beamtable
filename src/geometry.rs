@@ -6,6 +6,7 @@ pub struct Point {
     pub y: f64,
 }
 
+///Standard x,y point. Sort order for the point is x with tie breaks going to higher y-value.
 impl Point {
     pub fn new(x: f64, y: f64) -> Point {
         Point { x, y }
@@ -51,6 +52,8 @@ impl Ord for Point {
     }
 }
 
+/// Geomstr: Geometry class see, sister structure:
+/// https://github.com/meerk40t/meerk40t/blob/main/meerk40t/tools/geomstr.py
 #[derive(Debug, Clone)]
 pub struct Geomstr {
     pub segments: Vec<((f64, f64), (f64, f64), (f64, f64), (f64, f64), (f64, f64))>,
@@ -68,6 +71,7 @@ impl Geomstr {
         Geomstr { segments }
     }
 
+    /// Add a rectangle to the geometry.
     pub fn rect(&mut self, x: f64, y: f64, width: f64, height: f64, settings: f64) {
         self.line((x, y), (x + width, y), settings);
         self.line((x + width, y), (x + width, y + height), settings);
@@ -75,6 +79,7 @@ impl Geomstr {
         self.line((x, y + height), (x, y), settings);
     }
 
+    /// Add a line to the geometry.
     pub fn line(&mut self, p0: (f64, f64), p1: (f64, f64), settings: f64) {
         self.segments
             .push((p0, (0., 0.), (41.0, settings), (0., 0.), p1));
@@ -91,6 +96,7 @@ impl Geomstr {
         rise / run
     }
 
+    /// Find an intersection between index0 and index1.
     pub fn get_intersection(&self, index0: usize, index1: usize) -> Option<(f64, f64)> {
         let line0 = &self.segments[index0];
         let line1 = &self.segments[index1];
@@ -110,7 +116,8 @@ impl Geomstr {
         None
     }
 
-    ///Returns the y_intercept point given a line a given x. Default is used for y if there is a line along the requested x
+    /// Returns the y_intercept point given a line a given x.
+    /// Default is used for y if there is a line along the requested x.
     pub fn y_intercept(&self, index: usize, x: f64, default: f64) -> Point {
         let line = &self.segments[index];
         let a = &line.0;
@@ -128,6 +135,7 @@ impl Geomstr {
         Point::new(x, (x - x0) / m)
     }
 
+    /// Find point located within the current geometry at position t [0,1]
     pub fn point(&self, index: usize, t: f64) -> Point {
         let line = &self.segments[index];
         Point::new(

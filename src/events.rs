@@ -2,6 +2,8 @@ use std::cmp::Ordering;
 
 use crate::geometry::Point;
 
+/// Events for the scantable build. Each event is sorted by x, y, and slope in that order.
+/// Ordering is done in *reversed* order to make the BinaryHeap structure give a minheap.
 #[derive(Debug, Clone)]
 pub struct Event {
     pub point: Point,

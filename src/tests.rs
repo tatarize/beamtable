@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
     use crate::geometry::Geomstr;
-    use crate::scanbeam::ScanBeam;
+    use crate::table::BeamTable;
     use rand::prelude::ThreadRng;
     use rand::Rng;
 
@@ -10,10 +10,10 @@ mod tests {
         let mut segments = Geomstr::new();
         segments.rect(0.0, 0.0, 100.0, 100.0, 1.0);
         segments.rect(5.0, 5.0, 105.0, 105.0, 0.0);
-        let mut table = ScanBeam::new(segments);
-        let _q = table.build();
-        println!("{:?}", _q.actives);
-        println!("{:?}", _q.events);
+        let mut table = BeamTable::new(segments);
+        table.build();
+        println!("{:?}", table.actives);
+        println!("{:?}", table.events);
     }
 
     #[test]
@@ -31,16 +31,16 @@ mod tests {
                 }
             }
         }
-        let mut beam = ScanBeam::new(segments);
-        let table = beam.build();
+        let mut table = BeamTable::new(segments);
+        table.build();
         // println!("{:?}", table.actives);
         // println!("{:?}", table.events);
         for x in 0..1000 {
             let x = x as f64;
             let actives = table.actives_at(x, 0.0);
             for i in 1..actives.len() {
-                let prev = &beam.segments.segments[actives[i - 1] as usize];
-                let line = &beam.segments.segments[actives[i] as usize];
+                let prev = &table.geometry.segments[actives[i - 1] as usize];
+                let line = &table.geometry.segments[actives[i] as usize];
                 let pp0 = prev.0 .0;
                 let pp1 = prev.4 .0;
                 if pp0 < pp1 {
@@ -63,8 +63,8 @@ mod tests {
                     assert!(x >= cp1);
                     assert!(x <= cp0);
                 }
-                let last_pos = &beam.segments.y_intercept(actives[i - 1] as usize, x, 0.0);
-                let pos = &beam.segments.y_intercept(actives[i] as usize, x, 0.0);
+                let last_pos = &table.geometry.y_intercept(actives[i - 1] as usize, x, 0.0);
+                let pos = &table.geometry.y_intercept(actives[i] as usize, x, 0.0);
                 // println!("{last_pos:?} {pos:?}");
                 assert!(last_pos <= pos);
             }
@@ -79,16 +79,16 @@ mod tests {
         segments.line((746.0, 867.0), (680.0, 52.0), 9.0);
         segments.line((961.0, 481.0), (662.0, 182.0), 7.0);
 
-        let mut beam = ScanBeam::new(segments);
-        let table = beam.build();
+        let mut table = BeamTable::new(segments);
+        table.build();
         println!("{:?}", table.actives);
         println!("{:?}", table.events);
         for x in 689..690 {
             let x = x as f64;
             let actives = table.actives_at(x, 0.0);
             for i in 1..actives.len() {
-                let prev = &beam.segments.segments[actives[i - 1] as usize];
-                let line = &beam.segments.segments[actives[i] as usize];
+                let prev = &table.geometry.segments[actives[i - 1] as usize];
+                let line = &table.geometry.segments[actives[i] as usize];
                 let pp0 = prev.0 .0;
                 let pp1 = prev.4 .0;
                 if pp0 < pp1 {
@@ -111,8 +111,8 @@ mod tests {
                     assert!(x >= cp1);
                     assert!(x <= cp0);
                 }
-                let last_pos = &beam.segments.y_intercept(actives[i - 1] as usize, x, 0.0);
-                let pos = &beam.segments.y_intercept(actives[i] as usize, x, 0.0);
+                let last_pos = &table.geometry.y_intercept(actives[i - 1] as usize, x, 0.0);
+                let pos = &table.geometry.y_intercept(actives[i] as usize, x, 0.0);
                 println!("{last_pos:?} {pos:?}");
                 assert!(last_pos <= pos);
             }

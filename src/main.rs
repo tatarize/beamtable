@@ -1,5 +1,5 @@
 use beamtable::geometry::Geomstr;
-use beamtable::scanbeam::ScanBeam;
+use beamtable::table::BeamTable;
 use clap::Parser;
 use std::path::PathBuf;
 use vsvg::{DocumentTrait, Draw, LayerTrait, PathTrait};
@@ -39,11 +39,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     });
 
     // run scan beam algorithm
-    let mut scanbeam = ScanBeam::new(segments);
-    let beam_table = scanbeam.build();
+    let mut beamtable = BeamTable::new(segments);
+    beamtable.build();
     // let mask = beam_table.evenodd_fill(20.0);
-    let mask = beam_table.union_all();
-    let geom = beam_table.create(mask);
+    let mask = beamtable.union_all();
+    let geom = beamtable.create(mask);
 
     //
     // visualize the result
