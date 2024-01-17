@@ -38,9 +38,21 @@ impl Ord for Point {
         let x_eq = (self.x - other.x).abs() < 1e-12;
         if x_eq {
             if (self.y - other.y).abs() < 1e-12 { return Ordering::Equal; }
-            return f64::partial_cmp(&self.y, &other.y).expect("No NaNs");
+            match f64::partial_cmp(&self.y, &other.y) {
+                Some(t) => return t,
+                None => {
+                    println!("{:?} {:?}", self, other);
+                    panic!("This value was a NaN or something.")
+                }
+            }
         }
-        f64::partial_cmp(&self.x, &other.x).expect("No NaNs")
+        match f64::partial_cmp(&self.x, &other.x) {
+            Some(t) => return t,
+            None => {
+                println!("{:?} {:?}", self, other);
+                panic!("This value was a NaN or something.")
+            }
+        }
     }
 }
 
