@@ -35,20 +35,12 @@ impl PartialOrd<Self> for Point {
 
 impl Ord for Point {
     fn cmp(&self, other: &Self) -> Ordering {
-        if other == self {
-            return Ordering::Equal;
+        let x_eq = (self.x - other.x).abs() < 1e-12;
+        if x_eq {
+            if (self.y - other.y).abs() < 1e-12 { return Ordering::Equal; }
+            return f64::partial_cmp(&self.y, &other.y).expect("No NaNs");
         }
-        if other.x < self.x {
-            return Ordering::Greater;
-        } else if other.x > self.x {
-            return Ordering::Less;
-        }
-        if other.y < self.y {
-            return Ordering::Greater;
-        } else if other.y > self.y {
-            return Ordering::Less;
-        }
-        return Ordering::Equal;
+        f64::partial_cmp(&self.x, &other.x).expect("No NaNs")
     }
 }
 
