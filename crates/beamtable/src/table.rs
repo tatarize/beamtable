@@ -284,6 +284,7 @@ impl BeamTable {
         // Create initial start and end values for the event queue.
         for i in 0..self.geometry.segments.len() {
             let line = &self.geometry.segments[i];
+            if line.2.0 != 41.0 { continue; } // Must be line type.
             let p0 = Point::new(line.0 .0, line.0 .1);
             let p1 = Point::new(line.4 .0, line.4 .1);
             match Point::cmp(&p0, &p1) {
