@@ -1,0 +1,14 @@
+[package]
+name = "pybeamtable"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+name = "pybeamtable"
+crate-type = ["cdylib"]
+
+[dependencies]
+beamtable.workspace = true
+
+pyo3.workspace = true
