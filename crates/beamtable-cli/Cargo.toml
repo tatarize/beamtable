@@ -1,0 +1,13 @@
+[package]
+name = "beamtable-cli"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+
+[dependencies]
+beamtable.workspace = true
+
+clap.workspace = true
+vsvg.workspace = true
+vsvg-viewer.workspace = true

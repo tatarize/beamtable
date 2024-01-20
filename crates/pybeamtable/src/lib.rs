@@ -1,11 +1,6 @@
-mod events;
-pub mod geometry;
-pub mod table;
-mod tests;
-
-use crate::geometry::Geomstr;
-use crate::table::BeamTable;
+use ::beamtable::{BeamTable, Geomstr};
 use pyo3::prelude::*;
+
 // #[pyclass]
 // struct BeamTable {
 //     #[pyo3(get)]

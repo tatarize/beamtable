@@ -1,5 +1,5 @@
-use beamtable::geometry::Geomstr;
-use beamtable::table::BeamTable;
+use beamtable::BeamTable;
+use beamtable::Geomstr;
 use clap::Parser;
 use std::path::PathBuf;
 use vsvg::{DocumentTrait, Draw, LayerTrait, PathTrait};
