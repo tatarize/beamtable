@@ -33,23 +33,19 @@ use pyo3::prelude::*;
 //     Ok((segs, q.actives))
 // }
 #[pyfunction]
-fn build(
+fn union(
     segments: Vec<((f64, f64), (f64, f64), (f64, f64), (f64, f64), (f64, f64))>,
-) -> (Vec<(f64, f64)>, Vec<Vec<i32>>) {
+) -> Vec<((f64, f64), (f64, f64), (f64, f64), (f64, f64), (f64, f64))> {
     let mut table = BeamTable::new(Geomstr::from_segments(segments));
     table.build();
-
-    let mut segs = Vec::new();
-    for m in table.events.iter() {
-        segs.push((m.x, m.y));
-    }
-    (segs, table.actives)
+    let bo = table.union_all();
+    table.create(bo).segments
 }
 
 /// A Python module implemented in Rust.
 #[pymodule]
 fn beamtable(_py: Python, m: &PyModule) -> PyResult<()> {
-    m.add_function(wrap_pyfunction!(build, m)?)?;
+    m.add_function(wrap_pyfunction!(union, m)?)?;
     // m.add_function(wrap_pyfunction!(complex_test, m)?)?;
     // m.add_class::<BeamTable>()?;
     Ok(())
