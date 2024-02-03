@@ -85,7 +85,7 @@ impl Geomstr {
         let rise: f64 = line.0 .1 - line.4 .1;
         let run: f64 = line.0 .0 - line.4 .0;
         if run == 0.0 {
-            return f64::NEG_INFINITY;
+            return f64::INFINITY;
         }
         rise / run
     }
