@@ -212,7 +212,7 @@ impl BeamTable {
                 Ordering::Equal => {
                     let test_slope = &geometry.slope(actives[mid] as usize);
                     let value_slope = &geometry.slope(x as usize);
-                    if value_slope < test_slope {
+                    if value_slope >= test_slope {
                         hi = mid
                     } else {
                         lo = mid + 1
