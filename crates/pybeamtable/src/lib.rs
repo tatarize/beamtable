@@ -39,12 +39,12 @@ fn union(
     let mut table = BeamTable::new(Geomstr::from_segments(segments));
     table.build();
     let bo = table.union_all();
-    table.create(bo).segments
+    table.create(bo, true).segments
 }
 
 /// A Python module implemented in Rust.
 #[pymodule]
-fn beamtable(_py: Python, m: &PyModule) -> PyResult<()> {
+fn pybeamtable(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(union, m)?)?;
     // m.add_function(wrap_pyfunction!(complex_test, m)?)?;
     // m.add_class::<BeamTable>()?;
