@@ -142,7 +142,7 @@ impl BeamTable {
     }
 
     /// Create geometry from a BoolOp.
-    pub fn create(&self, mask: BoolOp) -> Geomstr {
+    pub fn create(&self, mask: BoolOp, greedy: bool) -> Geomstr {
         let mut g = Geomstr::new();
         let inside = &mask.inside;
         for j in 0..inside.len() - 1 {
@@ -172,7 +172,9 @@ impl BeamTable {
                 }
             }
         }
-        // g.greedy_distance(Point::new(0.,0.), false);
+        if greedy {
+            g.greedy_distance(Point::new(0., 0.), false);
+        }
         g
     }
 
