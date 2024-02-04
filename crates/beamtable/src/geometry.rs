@@ -137,4 +137,68 @@ impl Geomstr {
             t * (line.4 .1 - line.0 .1) + line.0 .1,
         )
     }
+
+    ///Check overall string distances
+    pub fn travel_distance_sq(&self) -> f64{
+        let mut total = 0.0;
+        for i in 1..self.segments.len() {
+            let line1 = &self.segments[i-1];
+            let line2 = &self.segments[i];
+            if line1.2.0 != 41.0 {
+                continue;
+            }
+            if line2.2.0 != 41.0 {
+                continue;
+            }
+            let dx = line1.4.0 - line2.0.0;
+            let dy = line1.4.1 - line2.0.1;
+            let delta = dx * dx + dy * dy;
+            total += delta
+        }
+        total
+    }
+
+    pub fn reverse(&mut self, element: usize) {
+        let g = &self.segments[element];
+        self.segments[element] = ((g.4.0, g.4.1), (g.3.0, g.3.1), (g.2.0, g.2.1), (g.1.0, g.1.1), (g.0.0, g.0.1))
+    }
+
+    /// Perform greedy optimization to minimize travel distances
+    pub fn greedy_distance(&mut self, mut pt: Point, flips: bool) {
+        for j in 0..self.segments.len() {
+            let mut best = f64::INFINITY;
+            let mut best_k = usize::MAX;
+            let mut best_flip = false;
+            if j > 0 {
+                pt.x = self.segments[j-1].4.0;
+                pt.y = self.segments[j-1].4.1;
+            }
+
+            for k in (j+1)..self.segments.len() {
+                let kline = &self.segments[k-1];
+                if flips {
+                    let dx = pt.x - kline.4.0;
+                    let dy = pt.y - kline.4.1;
+                    let delta = dx * dx + dy * dy;
+                    if delta < best {
+                        best = delta;
+                        best_k = k-1;
+                        best_flip = true;
+                    }
+                }
+                let dx = pt.x - kline.0.0;
+                let dy = pt.y - kline.0.1;
+                let delta = dx * dx + dy * dy;
+                if delta < best {
+                    best = delta;
+                    best_k = k-1;
+                    best_flip = false
+                }
+            }
+            if best_k != usize::MAX {
+                if best_flip { self.reverse(best_k); }
+                self.segments.swap(j, best_k);
+            }
+        }
+    }
 }

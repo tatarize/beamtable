@@ -175,7 +175,7 @@ impl BeamTable {
         g
     }
 
-    /// Find the actives for a particlar x/y event space.
+    /// Find the actives for a particular x/y event space.
     pub fn actives_at(&self, x: f64, y: f64) -> &Vec<i32> {
         let idx = self.events.binary_search(&Point::new(x, y));
         match idx {
