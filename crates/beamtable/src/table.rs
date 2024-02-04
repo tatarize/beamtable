@@ -172,6 +172,7 @@ impl BeamTable {
                 }
             }
         }
+        // g.greedy_distance(Point::new(0.,0.), false);
         g
     }
 
