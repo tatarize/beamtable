@@ -371,10 +371,10 @@ impl BeamTable {
                         }
                     }
                 }
-                Some((s1, _)) => {
+                Some((p1, p2)) => {
                     let s1 = actives
                         .iter()
-                        .position(|&e| e == s1)
+                        .position(|&e| e == p1)
                         .expect("Swap pos should exist.");
                     let s2 = s1 + 1;
                     actives.swap(s1, s2);
