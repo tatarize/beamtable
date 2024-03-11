@@ -231,18 +231,18 @@ impl BeamTable {
         &mut self,
         events: &mut BinaryHeap<Event>,
         actives: &Vec<i32>,
-        checked_swaps: &mut Vec<(i32, i32)>,
+        checked_swaps: &mut Vec<(usize, usize)>,
         q: usize,
         r: usize,
         sl: &Point,
     ) {
-        let q = actives[q];
-        let r = actives[r];
+        let q = actives[q] as usize;
+        let r = actives[r] as usize;
         let geometry = &self.geometry;
         if checked_swaps.contains(&(q, r)) {
             return;
         }
-        let intersection = geometry.get_intersection(q as usize, r as usize);
+        let intersection = geometry.get_intersection(q, r);
 
         match intersection {
             None => (),
@@ -252,7 +252,7 @@ impl BeamTable {
                 if (t1 == 0.0 || t1 == 1.0) && ((t2 == 0.0) || (t2 == 1.0)) {
                     return;
                 }
-                let pt_intersect = geometry.point(q as usize, t1);
+                let pt_intersect = geometry.point(q, t1);
                 self.intersections.push(pt_intersect.clone());
                 match Point::cmp(&sl, &pt_intersect) {
                     Ordering::Greater => {
@@ -264,11 +264,7 @@ impl BeamTable {
                     Ordering::Less => {}
                 }
                 checked_swaps.push((q, r));
-                let event = Event {
-                    point: pt_intersect,
-                    index: 0,
-                    swap: Some((q, r)),
-                };
+                let event = Event::swap(pt_intersect, q, r);
                 events.push(event);
             }
         }
@@ -281,7 +277,7 @@ impl BeamTable {
             return;
         }
         let mut events: BinaryHeap<Event> = BinaryHeap::new();
-        let mut checked_swaps: Vec<(i32, i32)> = Vec::new();
+        let mut checked_swaps: Vec<(usize, usize)> = Vec::new();
         let mut actives: Vec<i32> = Vec::new();
 
         // Create initial start and end values for the event queue.
@@ -292,28 +288,12 @@ impl BeamTable {
             let p1 = Point::new(line.4 .0, line.4 .1);
             match Point::cmp(&p0, &p1) {
                 Ordering::Less => {
-                    events.push(Event {
-                        point: p0,
-                        index: i as i32,
-                        swap: None,
-                    });
-                    events.push(Event {
-                        point: p1,
-                        index: !i as i32,
-                        swap: None,
-                    });
+                    events.push(Event::start(p0, i));
+                    events.push(Event::end(p1, i));
                 }
                 _ => {
-                    events.push(Event {
-                        point: p1,
-                        index: i as i32,
-                        swap: None,
-                    });
-                    events.push(Event {
-                        point: p0,
-                        index: !i as i32,
-                        swap: None,
-                    });
+                    events.push(Event::start(p1, i));
+                    events.push(Event::end(p0, i));
                 }
             }
         }
