@@ -1,7 +1,7 @@
 use crate::events::Event;
 use crate::geometry::{Geomstr, Point};
 use std::cmp::Ordering;
-use std::collections::{BinaryHeap, HashMap};
+use std::collections::HashMap;
 use std::ops::{BitAnd, BitOr, Not};
 
 #[derive(Debug, Clone)]
@@ -66,7 +66,7 @@ impl Not for BoolOp {
 pub struct BeamTable {
     pub geometry: Geomstr,
     pub events: Vec<Point>,
-    pub actives: Vec<Vec<i32>>,
+    pub actives: Vec<Vec<usize>>,
     pub intersections: Vec<Point>,
 
     built: bool,
@@ -124,15 +124,15 @@ impl BeamTable {
     pub fn union_all(&self) -> BoolOp {
         let mut spacemask = Vec::new();
         for active in &self.actives {
-            let mut set: HashMap<i32, bool> = HashMap::new();
+            let mut set: HashMap<usize, bool> = HashMap::new();
             let mut active_mask = Vec::new();
             active_mask.push(set.len() != 0);
             for a in active {
                 let line = &self.geometry.segments[*a as usize];
-                if set.contains_key(&(line.2 .1 as i32)) {
-                    set.remove(&(line.2 .1 as i32));
+                if set.contains_key(&(line.2 .1 as usize)) {
+                    set.remove(&(line.2 .1 as usize));
                 } else {
-                    set.insert(line.2 .1 as i32, true);
+                    set.insert(line.2 .1 as usize, true);
                 }
                 active_mask.push(set.len() != 0);
             }
@@ -179,7 +179,7 @@ impl BeamTable {
     }
 
     /// Find the actives for a particular x/y event space.
-    pub fn actives_at(&self, x: f64, y: f64) -> &Vec<i32> {
+    pub fn actives_at(&self, x: f64, y: f64) -> &Vec<usize> {
         let idx = self.events.binary_search(&Point::new(x, y));
         match idx {
             Ok(value) => {
@@ -195,16 +195,51 @@ impl BeamTable {
         }
     }
 
+    pub fn bisect_events(&self, pos: &Point, events: &Vec<Event>) -> i32 {
+        let mut hi: usize = events.len();
+        let mut lo: usize = 0;
+        while lo < hi {
+            let mid = (lo + hi) / 2;
+            let q = &events[mid];
+            let x = pos.x - q.point.x;
+            if x > 1e-8 {
+                // x is still greater
+                lo = mid + 1;
+                continue;
+            }
+            if x < -1e-8 {
+                // x is now less than
+                hi = mid;
+                continue
+            }
+            // x is equal.
+            let y = pos.y - q.point.y;
+            if y > 1e-8 {
+                // y is still greater
+                lo = mid + 1;
+                continue;
+            }
+            if y < -1e-8 {
+                // y is now less than
+                hi = mid;
+                continue
+            }
+            // y is also equal.
+            return mid as i32;
+        }
+        !lo as i32
+    }
+
     /// Internal: find the position within the given actives for the current x.
-    fn bisect_yints(&self, actives: &Vec<i32>, x: i32, scanline: &Point) -> i32 {
+    fn bisect_yints(&self, actives: &Vec<usize>, x: usize, scanline: &Point) -> usize {
         let geometry = &self.geometry;
         let mut lo = 0;
         let mut hi = actives.len();
         let mut mid;
         while lo < hi {
             mid = (lo + hi) / 2;
-            let test = &geometry.y_intercept(actives[mid] as usize, scanline.x, scanline.y);
-            let value = &geometry.y_intercept(x as usize, scanline.x, scanline.y);
+            let test = &geometry.y_intercept(actives[mid], scanline.x, scanline.y);
+            let value = &geometry.y_intercept(x, scanline.x, scanline.y);
             match Point::cmp(&value, &test) {
                 Ordering::Less => {
                     hi = mid;
@@ -213,8 +248,8 @@ impl BeamTable {
                     lo = mid + 1;
                 }
                 Ordering::Equal => {
-                    let test_slope = &geometry.slope(actives[mid] as usize);
-                    let value_slope = &geometry.slope(x as usize);
+                    let test_slope = &geometry.slope(actives[mid]);
+                    let value_slope = &geometry.slope(x);
                     if value_slope < test_slope {
                         hi = mid
                     } else {
@@ -223,26 +258,35 @@ impl BeamTable {
                 }
             }
         }
-        lo as i32
+        lo
+    }
+
+    fn get_or_insert_event<'a>(&'a self, pt: &Point, events: &'a mut Vec<Event>) -> &mut Event {
+        let mut ip1 = self.bisect_events(pt, events);
+        if ip1 < 0 {
+            ip1 = !ip1;
+            events.insert(ip1 as usize, Event::from_pt(pt.x, pt.y));
+        }
+        &mut events[ip1 as usize]
     }
 
     /// Internal: check for intersections between indexes q and r, occurring after sl
     fn check_intersections(
         &mut self,
-        events: &mut BinaryHeap<Event>,
-        actives: &Vec<i32>,
-        checked_swaps: &mut Vec<(i32, i32)>,
+        events: &mut Vec<Event>,
+        actives: &Vec<usize>,
+        checked_swaps: &mut Vec<(usize, usize)>,
         q: usize,
         r: usize,
         sl: &Point,
     ) {
-        let q = actives[q];
-        let r = actives[r];
+        let q = actives[q] as usize;
+        let r = actives[r] as usize;
         let geometry = &self.geometry;
         if checked_swaps.contains(&(q, r)) {
             return;
         }
-        let intersection = geometry.get_intersection(q as usize, r as usize);
+        let intersection = geometry.get_intersection(q, r);
 
         match intersection {
             None => (),
@@ -252,7 +296,7 @@ impl BeamTable {
                 if (t1 == 0.0 || t1 == 1.0) && ((t2 == 0.0) || (t2 == 1.0)) {
                     return;
                 }
-                let pt_intersect = geometry.point(q as usize, t1);
+                let pt_intersect = geometry.point(q, t1);
                 self.intersections.push(pt_intersect.clone());
                 match Point::cmp(&sl, &pt_intersect) {
                     Ordering::Greater => {
@@ -264,12 +308,9 @@ impl BeamTable {
                     Ordering::Less => {}
                 }
                 checked_swaps.push((q, r));
-                let event = Event {
-                    point: pt_intersect,
-                    index: 0,
-                    swap: Some((q, r)),
-                };
-                events.push(event);
+                let event = self.get_or_insert_event(&pt_intersect, events);
+                event.update.push(q);
+                event.update.push(r);
             }
         }
     }
@@ -280,9 +321,9 @@ impl BeamTable {
             //This was already built.
             return;
         }
-        let mut events: BinaryHeap<Event> = BinaryHeap::new();
-        let mut checked_swaps: Vec<(i32, i32)> = Vec::new();
-        let mut actives: Vec<i32> = Vec::new();
+        let mut events: Vec<Event> = Vec::new();
+        let mut checked_swaps: Vec<(usize, usize)> = Vec::new();
+        let mut actives: Vec<usize> = Vec::new();
 
         // Create initial start and end values for the event queue.
         for i in 0..self.geometry.segments.len() {
@@ -292,120 +333,118 @@ impl BeamTable {
             let p1 = Point::new(line.4 .0, line.4 .1);
             match Point::cmp(&p0, &p1) {
                 Ordering::Less => {
-                    events.push(Event {
-                        point: p0,
-                        index: i as i32,
-                        swap: None,
-                    });
-                    events.push(Event {
-                        point: p1,
-                        index: !i as i32,
-                        swap: None,
-                    });
+                    let ev1 = self.get_or_insert_event(&p0, &mut events);
+                    ev1.add.push(i);
+                    let ev2 = self.get_or_insert_event(&p1, &mut events);
+                    ev2.remove.push(i);
                 }
                 _ => {
-                    events.push(Event {
-                        point: p1,
-                        index: i as i32,
-                        swap: None,
-                    });
-                    events.push(Event {
-                        point: p0,
-                        index: !i as i32,
-                        swap: None,
-                    });
+                    let ev1 = self.get_or_insert_event(&p1, &mut events);
+                    ev1.add.push(i);
+                    let ev2 = self.get_or_insert_event(&p0, &mut events);
+                    ev2.remove.push(i);
                 }
             }
         }
 
         // Process the event queue, performs Bentley-Ottmann line intersection checks
+        // for i in 0..events.len() {
+        //     let event = &events[i];
+        //     print!("{:?}\n", event);
+        // }
         while events.len() != 0 {
-            let event = events
-                .pop()
-                .expect("Pop only called after checking events existed.");
-            let idx = event.index;
-            let index = event.index;
+            let event = events.remove(0);
+
             let pt = &event.point;
-            match event.swap {
-                None => {
-                    if idx >= 0 {
-                        // Insert.
-                        let ip = self.bisect_yints(&actives, index, &event.point) as usize;
-                        actives.insert(ip, index);
-                        if ip > 0 {
-                            self.check_intersections(
-                                &mut events,
-                                &actives,
-                                &mut checked_swaps,
-                                ip - 1,
-                                ip,
-                                pt,
-                            )
-                        }
-                        if ip < actives.len() - 1 {
-                            self.check_intersections(
-                                &mut events,
-                                &actives,
-                                &mut checked_swaps,
-                                ip,
-                                ip + 1,
-                                pt,
-                            )
-                        }
-                    } else {
-                        //Remove.
-                        let rp = actives
-                            .iter()
-                            .position(|&e| e == !index)
-                            .expect("Was added should remove.");
-                        actives.remove(rp);
-                        if 0 < rp && rp < actives.len() {
-                            self.check_intersections(
-                                &mut events,
-                                &actives,
-                                &mut checked_swaps,
-                                rp - 1,
-                                rp,
-                                pt,
-                            )
-                        }
-                    }
+            for a in 0..event.add.len() {
+                let ad = event.add[a];
+                // Insert.
+                let ip = self.bisect_yints(&actives, ad, &event.point);
+                actives.insert(ip, ad);
+                if ip > 0 {
+                    self.check_intersections(
+                        &mut events,
+                        &actives,
+                        &mut checked_swaps,
+                        ip - 1,
+                        ip,
+                        pt,
+                    )
                 }
-                Some((p1, p2)) => {
-                    let s1 = actives
-                        .iter()
-                        .position(|&e| e == p1)
-                        .expect("Swap pos should exist.");
-                    let s2 = s1 + 1;
-                    actives.swap(s1, s2);
-                    if s1 > 0 {
-                        self.check_intersections(
-                            &mut events,
-                            &actives,
-                            &mut checked_swaps,
-                            s1 - 1,
-                            s1,
-                            pt,
-                        );
-                    }
-                    if s2 < actives.len() - 1 {
-                        self.check_intersections(
-                            &mut events,
-                            &actives,
-                            &mut checked_swaps,
-                            s2,
-                            s2 + 1,
-                            pt,
-                        );
-                    }
+                if ip < actives.len() - 1 {
+                    self.check_intersections(
+                        &mut events,
+                        &actives,
+                        &mut checked_swaps,
+                        ip,
+                        ip + 1,
+                        pt,
+                    )
                 }
             }
-            match events.peek() {
-                None => {}
-                Some(last_pt) => {
-                    if pt == &last_pt.point {
-                        continue;
-                    }
+            for r in 0..event.remove.len() {
+                let rm = event.remove[r];
+                //Remove.
+                let rp = actives
+                    .iter()
+                    .position(|&e| e == rm)
+                    .expect("Was added should remove");
+                actives.remove(rp);
+                if 0 < rp && rp < actives.len() {
+                    self.check_intersections(
+                        &mut events,
+                        &actives,
+                        &mut checked_swaps,
+                        rp - 1,
+                        rp,
+                        pt,
+                    )
+                }
+            }
+            for u in 0..event.update.len() {
+                let ud = event.update[u];
+
+                //Remove.
+                if !actives.contains(&ud) {
+                    continue
+                }
+                let rp = actives
+                    .iter()
+                    .position(|&e| e == ud)
+                    .expect("Was added should remove.");
+                actives.remove(rp);
+                if 0 < rp && rp < actives.len() {
+                    self.check_intersections(
+                        &mut events,
+                        &actives,
+                        &mut checked_swaps,
+                        rp - 1,
+                        rp,
+                        pt,
+                    )
+                }
+                // readd.
+                let ip = self.bisect_yints(&actives, ud, &event.point) as usize;
+                actives.insert(ip, ud);
+                if ip > 0 {
+                    self.check_intersections(
+                        &mut events,
+                        &actives,
+                        &mut checked_swaps,
+                        ip - 1,
+                        ip,
+                        pt,
+                    )
+                }
+                if ip < actives.len() - 1 {
+                    self.check_intersections(
+                        &mut events,
+                        &actives,
+                        &mut checked_swaps,
+                        ip,
+                        ip + 1,
+                        pt,
+                    )
                 }
             }
 

@@ -7,8 +7,45 @@ use crate::geometry::Point;
 #[derive(Debug, Clone)]
 pub struct Event {
     pub point: Point,
-    pub index: i32,
-    pub swap: Option<(i32, i32)>,
+    pub add: Vec<usize>,
+    pub remove: Vec<usize>,
+    pub update: Vec<usize>,
+}
+
+impl Event {
+    pub fn from_pt(x: f64, y: f64) -> Event {
+        Event {
+            point: Point::new(x, y),
+            add: Vec::new(),
+            remove: Vec::new(),
+            update: Vec::new(),
+        }
+    }
+
+    pub fn swap(pt: Point, s1: usize, s2: usize) -> Event {
+        Event {
+            point: pt,
+            add: Vec::new(),
+            remove: Vec::new(),
+            update: vec![s1, s2],
+        }
+    }
+    pub fn start(pt: Point, start: usize) -> Event {
+        Event {
+            point: pt,
+            add: vec![start],
+            remove: Vec::new(),
+            update: Vec::new(),
+        }
+    }
+    pub fn end(pt: Point, end: usize) -> Event {
+        Event {
+            point: pt,
+            add: Vec::new(),
+            remove: vec![end],
+            update: Vec::new(),
+        }
+    }
 }
 
 impl Eq for Event {}
@@ -34,14 +71,9 @@ impl Ord for Event {
             Ordering::Less => {
                 return Ordering::Greater;
             }
-            Ordering::Equal => {}
+            Ordering::Equal => {
+                return Ordering::Equal;
+            }
         }
-        if other.index > self.index {
-            return Ordering::Less;
-        }
-        if other.index < self.index {
-            return Ordering::Greater;
-        }
-        return Ordering::Equal;
     }
 }

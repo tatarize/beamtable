@@ -81,7 +81,7 @@ impl App for WhiskersDemoSketch {
         beamtable.build();
         // let mask = beamtable.evenodd_fill(20.0);
         let mask = beamtable.union_all();
-        let geom = beamtable.create(mask);
+        let geom = beamtable.create(mask, false); // greedy = false
 
         //
         // visualize the result
