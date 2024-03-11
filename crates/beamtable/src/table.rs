@@ -231,15 +231,15 @@ impl BeamTable {
     }
 
     /// Internal: find the position within the given actives for the current x.
-    fn bisect_yints(&self, actives: &Vec<usize>, x: usize, scanline: &Point) -> i32 {
+    fn bisect_yints(&self, actives: &Vec<usize>, x: usize, scanline: &Point) -> usize {
         let geometry = &self.geometry;
         let mut lo = 0;
         let mut hi = actives.len();
         let mut mid;
         while lo < hi {
             mid = (lo + hi) / 2;
-            let test = &geometry.y_intercept(actives[mid] as usize, scanline.x, scanline.y);
-            let value = &geometry.y_intercept(x as usize, scanline.x, scanline.y);
+            let test = &geometry.y_intercept(actives[mid], scanline.x, scanline.y);
+            let value = &geometry.y_intercept(x, scanline.x, scanline.y);
             match Point::cmp(&value, &test) {
                 Ordering::Less => {
                     hi = mid;
@@ -248,8 +248,8 @@ impl BeamTable {
                     lo = mid + 1;
                 }
                 Ordering::Equal => {
-                    let test_slope = &geometry.slope(actives[mid] as usize);
-                    let value_slope = &geometry.slope(x as usize);
+                    let test_slope = &geometry.slope(actives[mid]);
+                    let value_slope = &geometry.slope(x);
                     if value_slope < test_slope {
                         hi = mid
                     } else {
@@ -258,7 +258,7 @@ impl BeamTable {
                 }
             }
         }
-        !lo as i32
+        lo
     }
 
     fn get_or_insert_event<'a>(&'a self, pt: &Point, events: &'a mut Vec<Event>) -> &mut Event {
@@ -348,34 +348,19 @@ impl BeamTable {
         }
 
         // Process the event queue, performs Bentley-Ottmann line intersection checks
+        // for i in 0..events.len() {
+        //     let event = &events[i];
+        //     print!("{:?}\n", event);
+        // }
         while events.len() != 0 {
-            let event = events
-                .pop()
-                .expect("Pop only called after checking events existed.");
+            let event = events.remove(0);
+            //print!("{:?}\n", event);
+
             let pt = &event.point;
-            for r in 0..event.remove.len() {
-                let rm = event.remove[r];
-                //Remove.
-                let rp = actives
-                    .iter()
-                    .position(|&e| e == rm)
-                    .expect("Was added should remove.");
-                actives.remove(rp);
-                if 0 < rp && rp < actives.len() {
-                    self.check_intersections(
-                        &mut events,
-                        &actives,
-                        &mut checked_swaps,
-                        rp - 1,
-                        rp,
-                        pt,
-                    )
-                }
-            }
             for a in 0..event.add.len() {
                 let ad = event.add[a];
                 // Insert.
-                let ip = self.bisect_yints(&actives, ad, &event.point) as usize;
+                let ip = self.bisect_yints(&actives, ad, &event.point);
                 actives.insert(ip, ad);
                 if ip > 0 {
                     self.check_intersections(
@@ -398,10 +383,32 @@ impl BeamTable {
                     )
                 }
             }
+            for r in 0..event.remove.len() {
+                let rm = event.remove[r];
+                //Remove.
+                let rp = actives
+                    .iter()
+                    .position(|&e| e == rm)
+                    .expect("Was added should remove");
+                actives.remove(rp);
+                if 0 < rp && rp < actives.len() {
+                    self.check_intersections(
+                        &mut events,
+                        &actives,
+                        &mut checked_swaps,
+                        rp - 1,
+                        rp,
+                        pt,
+                    )
+                }
+            }
             for u in 0..event.update.len() {
                 let ud = event.update[u];
 
                 //Remove.
+                if !actives.contains(&ud) {
+                    continue
+                }
                 let rp = actives
                     .iter()
                     .position(|&e| e == ud)
