@@ -354,7 +354,6 @@ impl BeamTable {
         // }
         while events.len() != 0 {
             let event = events.remove(0);
-            //print!("{:?}\n", event);
 
             let pt = &event.point;
             for a in 0..event.add.len() {
@@ -446,14 +445,6 @@ impl BeamTable {
                         ip + 1,
                         pt,
                     )
-                }
-            }
-            match events.pop() {
-                None => {}
-                Some(last_pt) => {
-                    if pt == &last_pt.point {
-                        continue;
-                    }
                 }
             }
 
