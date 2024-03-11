@@ -13,7 +13,7 @@ pub struct Event {
 }
 
 impl Event {
-    pub fn new(x: f64, y: f64) -> Event {
+    pub fn from_pt(x: f64, y: f64) -> Event {
         Event {
             point: Point::new(x, y),
             add: Vec::new(),
