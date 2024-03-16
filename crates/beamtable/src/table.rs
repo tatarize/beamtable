@@ -238,7 +238,8 @@ impl BeamTable {
         let mut mid;
         while lo < hi {
             mid = (lo + hi) / 2;
-            let test = &geometry.y_intercept(actives[mid], scanline.x, scanline.y);
+            let y = actives[mid];
+            let test = &geometry.y_intercept(y, scanline.x, scanline.y);
             let value = &geometry.y_intercept(x, scanline.x, scanline.y);
             match Point::cmp(&value, &test) {
                 Ordering::Less => {
@@ -248,12 +249,17 @@ impl BeamTable {
                     lo = mid + 1;
                 }
                 Ordering::Equal => {
-                    let test_slope = &geometry.slope(actives[mid]);
+                    let test_slope = &geometry.slope(y);
                     let value_slope = &geometry.slope(x);
                     if value_slope < test_slope {
                         hi = mid
                     } else {
-                        lo = mid + 1
+                        if x < y {
+                            hi = mid;
+                        }
+                        else {
+                            lo = mid + 1
+                        }
                     }
                 }
             }
