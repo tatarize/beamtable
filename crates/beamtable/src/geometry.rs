@@ -23,7 +23,7 @@ impl Eq for Point {}
 
 impl PartialEq<Self> for Point {
     fn eq(&self, other: &Self) -> bool {
-        return (self.x - other.x).abs() < 1e-12 && (self.y - other.y).abs() < 1e-12;
+        return (self.x - other.x).abs() < 1e-8 && (self.y - other.y).abs() < 1e-8;
     }
 }
 
@@ -35,9 +35,9 @@ impl PartialOrd<Self> for Point {
 
 impl Ord for Point {
     fn cmp(&self, other: &Self) -> Ordering {
-        let x_eq = (self.x - other.x).abs() < 1e-12;
+        let x_eq = (self.x - other.x).abs() < 1e-8;
         if x_eq {
-            if (self.y - other.y).abs() < 1e-12 {
+            if (self.y - other.y).abs() < 1e-8 {
                 return Ordering::Equal;
             }
             return f64::partial_cmp(&self.y, &other.y).expect("No NaNs");
